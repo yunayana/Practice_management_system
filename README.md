@@ -23,3 +23,15 @@ Projekt przedstawiający wymagania oraz modele logiki biznesowej aplikacji do ob
 
 ## Cel
 Celem projektu jest przedstawienie przepływu danych, interakcji użytkowników i logiki biznesowej aplikacji wspierającej cyfrową obsługę praktyk zawodowych. 
+## Diagram stanów dokumentu
+
+```mermaid
+stateDiagram-v2
+    [*] --> Draft
+    Draft --> Submitted: Wyślij do weryfikacji
+    Submitted --> Under_Review: Rozpocznij sprawdzanie
+    Under_Review --> Rejected: Dodaj uwagi
+    Under_Review --> Approved: Zatwierdź
+    Rejected --> Draft: Popraw dokument
+    Approved --> Closed: Zamknij proces
+```
