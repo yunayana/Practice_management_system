@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block title %}Lista dzienników praktyk{% endblock %}
+{% block page_title %}Lista dzienników praktyk{% endblock %}
+{% block page_subtitle %}Przegląd wszystkich zapisanych dzienników studentów{% endblock %}
+
+{% block content %}
+<div class="actions">
+    <a class="btn" href="{{ url_for('dziennik') }}">Dodaj nowy dziennik</a>
+</div>
+
+<div class="table-wrap">
+    <table>
+        <thead>
+            <tr>
+                <th>Student</th>
+                <th>Nr albumu</th>
+                <th>Miejsce praktyki</th>
+                <th>Data od</th>
+                <th>Data do</th>
+                <th>Liczba wpisów</th>
+                <th>Akcja</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for j in journals %}
+            <tr>
+                <td>{{ j.student_name }}</td>
+                <td>{{ j.album }}</td>
+                <td>{{ j.practice_place }}</td>
+                <td>{{ j.start_date }}</td>
+                <td>{{ j.end_date }}</td>
+                <td>{{ j.entries|length }}</td>
+                <td>
+                    <a class="btn btn-secondary" href="{{ url_for('edytuj_dziennik', album=j.album) }}">
+                        Edytuj
+                    </a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

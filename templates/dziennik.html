@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+
+{% block title %}Dziennik praktyki zawodowej{% endblock %}
+{% block page_title %}Dziennik praktyki zawodowej{% endblock %}
+{% block page_subtitle %}Formularz wpisów dziennych powiązanych z konkretnym studentem{% endblock %}
+
+{% block content %}
+<div class="actions">
+    <a class="btn btn-secondary" href="{{ url_for('lista_dziennikow') }}">Lista dzienników</a>
+</div>
+
+<form method="post" action="{{ url_for('dziennik') }}">
+    <h3 class="section-title">Dane studenta</h3>
+
+    <div class="form-grid">
+        <label>
+            Student
+            <input type="text" name="student_name" value="{{ data.student_name if data else '' }}">
+        </label>
+
+        <label>
+            Nr albumu
+            <input type="text" name="album" value="{{ data.album if data else '' }}">
+        </label>
+
+        <label>
+            W zakresie
+            <input type="text" name="specialization" value="{{ data.specialization if data else '' }}">
+        </label>
+
+        <label>
+            Rok akademicki
+            <input type="text" name="academic_year" value="{{ data.academic_year if data else '' }}">
+        </label>
+
+        <label>
+            Miejsce odbywania praktyki
+            <input type="text" name="practice_place" value="{{ data.practice_place if data else '' }}">
+        </label>
+
+        <label>
+            Data rozpoczęcia
+            <input type="date" name="start_date" value="{{ data.start_date if data else '' }}">
+        </label>
+
+        <label>
+            Data zakończenia
+            <input type="date" name="end_date" value="{{ data.end_date if data else '' }}">
+        </label>
+    </div>
+
+    <label>
+        Wykaz załączników
+        <textarea name="attachments" rows="3">{{ data.attachments if data else '' }}</textarea>
+    </label>
+
+    <h3 class="section-title">Wpisy dziennika</h3>
+
+    <div class="info-box">
+        Każdy wiersz odpowiada jednemu dniu praktyki. Opis powinien jasno
+        wskazywać, jakie prace zostały wykonane i do jakich efektów uczenia się nawiązują.
+    </div>
+
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>Dzień</th>
+                    <th>Data</th>
+                    <th>Opis wykonanych prac</th>
+                    <th>Nr efektów uczenia się</th>
+                    <th>Podpis osoby nadzorującej</th>
+                    <th>Akcje</th>
+                </tr>
+            </thead>
+            <tbody id="journal-table">
+                {% if data and data.entries %}
+                    {% for entry in data.entries %}
+                    <tr>
+                        <td><input type="text" name="day[]" value="{{ entry.day }}"></td>
+                        <td><input type="date" name="date[]" value="{{ entry.date }}"></td>
+                        <td><textarea name="description[]" rows="3">{{ entry.description }}</textarea></td>
+                        <td><input type="text" name="effects_numbers[]" value="{{ entry.effects_numbers }}"></td>
+                        <td><input type="text" name="supervisor[]" value="{{ entry.supervisor }}"></td>
+                        <td>
+                            <button type="button" class="btn btn-secondary" onclick="addAfter(this)">Dodaj pod</button>
+                            <button type="button" class="btn btn-danger" onclick="deleteRow(this)">Usuń</button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td><input type="text" name="day[]"></td>
+                        <td><input type="date" name="date[]"></td>
+                        <td><textarea name="description[]" rows="3"></textarea></td>
+                        <td><input type="text" name="effects_numbers[]"></td>
+                        <td><input type="text" name="supervisor[]"></td>
+                        <td>
+                            <button type="button" class="btn btn-secondary" onclick="addAfter(this)">Dodaj pod</button>
+                            <button type="button" class="btn btn-danger" onclick="deleteRow(this)">Usuń</button>
+                        </td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="actions">
+        <button type="button" onclick="addRow()">Dodaj wiersz na końcu</button>
+        <button type="submit">Zapisz dziennik</button>
+    </div>
+</form>
+
+<script>
+    function createRow() {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+            <td><input type="text" name="day[]"></td>
+            <td><input type="date" name="date[]"></td>
+            <td><textarea name="description[]" rows="3"></textarea></td>
+            <td><input type="text" name="effects_numbers[]"></td>
+            <td><input type="text" name="supervisor[]"></td>
+            <td>
+                <button type="button" class="btn btn-secondary" onclick="addAfter(this)">Dodaj pod</button>
+                <button type="button" class="btn btn-danger" onclick="deleteRow(this)">Usuń</button>
+            </td>
+        `;
+        return row;
+    }
+
+    function addRow() {
+        document.getElementById("journal-table").appendChild(createRow());
+    }
+
+    function addAfter(button) {
+        const currentRow = button.closest("tr");
+        currentRow.after(createRow());
+    }
+
+    function deleteRow(button) {
+        const row = button.closest("tr");
+        row.remove();
+    }
+</script>
+{% endblock %}

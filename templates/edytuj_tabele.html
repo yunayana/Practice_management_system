@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+
+{% block title %}Edytuj kandydatów{% endblock %}
+{% block page_title %}Edytowalna tabela kandydatów{% endblock %}
+{% block page_subtitle %}Dodawanie, edycja i usuwanie rekordów kandydatów w jednym widoku{% endblock %}
+
+{% block content %}
+<form method="post" action="{{ url_for('aktualizuj_wszystko') }}">
+    <div class="actions">
+        <button type="button" onclick="addRow()">Dodaj na końcu</button>
+        <button type="submit">Zapisz wszystko</button>
+    </div>
+
+    <div class="info-box">
+        Możesz dodawać nowe osoby, usuwać wiersze i zapisać wszystkie zmiany jednocześnie.
+    </div>
+
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>Imię i nazwisko</th>
+                    <th>Email</th>
+                    <th>Akcje</th>
+                </tr>
+            </thead>
+            <tbody id="tabela-kandydatow">
+                {% if kandydaci %}
+                    {% for k in kandydaci %}
+                    <tr>
+                        <td><input type="text" name="fullname[]" value="{{ k.fullname }}"></td>
+                        <td><input type="email" name="email[]" value="{{ k.email }}"></td>
+                        <td>
+                            <button type="button" class="btn btn-secondary" onclick="addAfter(this)">Dodaj pod</button>
+                            <button type="button" class="btn btn-danger" onclick="deleteRow(this)">Usuń</button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td><input type="text" name="fullname[]"></td>
+                        <td><input type="email" name="email[]"></td>
+                        <td>
+                            <button type="button" class="btn btn-secondary" onclick="addAfter(this)">Dodaj pod</button>
+                            <button type="button" class="btn btn-danger" onclick="deleteRow(this)">Usuń</button>
+                        </td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</form>
+
+<script>
+    function createRow() {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+            <td><input type="text" name="fullname[]"></td>
+            <td><input type="email" name="email[]"></td>
+            <td>
+                <button type="button" class="btn btn-secondary" onclick="addAfter(this)">Dodaj pod</button>
+                <button type="button" class="btn btn-danger" onclick="deleteRow(this)">Usuń</button>
+            </td>
+        `;
+        return row;
+    }
+
+    function addRow() {
+        const tbody = document.getElementById("tabela-kandydatow");
+        tbody.appendChild(createRow());
+    }
+
+    function addAfter(button) {
+        const currentRow = button.closest("tr");
+        currentRow.after(createRow());
+    }
+
+    function deleteRow(button) {
+        const row = button.closest("tr");
+        row.remove();
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="pl">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}System praktyk{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="app-shell">
+        <aside class="sidebar">
+            <div class="brand">
+                <div class="brand-badge">AP</div>
+                <div>
+                    <h1>System praktyk</h1>
+                    <p>TYHA</p>
+                </div>
+            </div>
+
+            <nav class="sidebar-nav">
+                <a href="{{ url_for('index') }}">Kandydaci</a>
+                <a href="{{ url_for('potwierdzenie') }}">Nowe potwierdzenie</a>
+                <a href="{{ url_for('lista_potwierdzen') }}">Lista potwierdzeń</a>
+                <a href="{{ url_for('dziennik') }}">Nowy dziennik</a>
+                <a href="{{ url_for('lista_dziennikow') }}">Lista dzienników</a>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <header class="topbar">
+                <div>
+                    <h2>{% block page_title %}Panel{% endblock %}</h2>
+                    <p class="subtitle">{% block page_subtitle %}Zarządzanie dokumentacją praktyk{% endblock %}</p>
+                </div>
+            </header>
+
+            <section class="content-card">
+                {% block content %}{% endblock %}
+            </section>
+        </main>
+    </div>
+</body>
+</html>

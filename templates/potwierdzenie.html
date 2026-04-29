@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+
+{% block title %}Potwierdzenie efektów uczenia się{% endblock %}
+{% block page_title %}Potwierdzenie efektów uczenia się{% endblock %}
+{% block page_subtitle %}Formularz załącznika nr 4 dla studenta odbywającego praktykę{% endblock %}
+
+{% block content %}
+<div class="actions">
+    <a class="btn btn-secondary" href="{{ url_for('lista_potwierdzen') }}">Lista studentów</a>
+</div>
+
+<form method="post" action="{{ url_for('potwierdzenie') }}">
+    <h3 class="section-title">Dane studenta</h3>
+
+    <div class="form-grid">
+        <label>
+            Student/ka
+            <input type="text" name="student_name" value="{{ data.student_name if data else '' }}">
+        </label>
+
+        <label>
+            Nr albumu
+            <input type="text" name="album" value="{{ data.album if data else '' }}">
+        </label>
+
+        <label>
+            Specjalność
+            <input type="text" name="specialty" value="{{ data.specialty if data else '' }}">
+        </label>
+
+        <label>
+            Liczba godzin praktyki
+            <input type="number" name="hours" value="{{ data.hours if data else '' }}">
+        </label>
+    </div>
+
+    <h3 class="section-title">Efekty uczenia się</h3>
+
+    <div class="info-box">
+        Zaznacz efekty, które zostały osiągnięte w ramach praktyki zawodowej.
+    </div>
+
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>Nr</th>
+                    <th>Opis efektu</th>
+                    <th>Uzyskano</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for nr, opis in [
+                    ('01', 'Ma wiedzę na temat sposobu realizacji zadań inżynierskich dotyczących informatyki z zachowaniem standardów i norm technicznych'),
+                    ('02', 'Zna technologie, narzędzia, metody, techniki oraz sprzęt stosowane w informatyce'),
+                    ('03', 'Zna ekonomiczne i prawne skutki własnych działań oraz ograniczenia prawa autorskiego i kodeksu pracy'),
+                    ('04', 'Zna zasady bezpieczeństwa pracy i ergonomii w zawodzie informatyka'),
+                    ('05', 'Pozyskuje informacje o technologiach, metodach i sprzęcie z różnych źródeł'),
+                    ('06', 'Rozwija kompetencje w zakresie sprzętu i oprogramowania'),
+                    ('07', 'Opracowuje dokumentację i referuje zagadnienia'),
+                    ('08', 'Identyfikuje problem informatyczny i realizuje rozwiązanie'),
+                    ('09', 'Rozwiązuje rzeczywiste zadanie inżynierskie z uwzględnieniem norm i etyki'),
+                    ('10', 'Pracuje w zespole branży IT'),
+                    ('11', 'Przestrzega zasad etyki zawodowej'),
+                    ('12', 'Komunikuje zagadnienia informatyczne osobom spoza branży'),
+                    ('13', 'Dostrzega tempo deaktualizacji wiedzy informatycznej')
+                ] %}
+                <tr>
+                    <td>{{ nr }}</td>
+                    <td>{{ opis }}</td>
+                    <td style="text-align: center;">
+                        <input
+                            type="checkbox"
+                            name="effect_{{ nr }}"
+                            {% if data and data.effects and data.effects.get(nr) %}checked{% endif %}
+                        >
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <h3 class="section-title">Potwierdzenie opiekuna zakładowego</h3>
+    <label>
+        Uwagi / potwierdzenie
+        <textarea name="company_supervisor_note" rows="4">{{ data.company_supervisor_note if data else '' }}</textarea>
+    </label>
+
+    <h3 class="section-title">Opinia opiekuna uczelnianego</h3>
+    <label>
+        Opinia
+        <textarea name="university_supervisor_opinion" rows="4">{{ data.university_supervisor_opinion if data else '' }}</textarea>
+    </label>
+
+    <div class="actions">
+        <button type="submit">Zapisz</button>
+    </div>
+</form>
+{% endblock %}

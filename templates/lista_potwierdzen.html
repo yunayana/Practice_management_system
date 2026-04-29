@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block title %}Lista potwierdzeń{% endblock %}
+{% block page_title %}Lista studentów{% endblock %}
+{% block page_subtitle %}Przegląd zapisanych formularzy potwierdzenia efektów uczenia się{% endblock %}
+
+{% block content %}
+<div class="actions">
+    <a class="btn" href="{{ url_for('potwierdzenie') }}">Dodaj nowego studenta</a>
+</div>
+
+<div class="table-wrap">
+    <table>
+        <thead>
+            <tr>
+                <th>Student</th>
+                <th>Nr albumu</th>
+                <th>Specjalność</th>
+                <th>Godziny</th>
+                <th>Akcja</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% if students %}
+                {% for s in students %}
+                <tr>
+                    <td>{{ s.student_name }}</td>
+                    <td>{{ s.album }}</td>
+                    <td>{{ s.specialty }}</td>
+                    <td>{{ s.hours }}</td>
+                    <td>
+                        <a class="btn btn-secondary" href="{{ url_for('edytuj_potwierdzenie', album=s.album) }}">
+                            Edytuj
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            {% else %}
+                <tr>
+                    <td colspan="5">Brak zapisanych potwierdzeń efektów uczenia się.</td>
+                </tr>
+            {% endif %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

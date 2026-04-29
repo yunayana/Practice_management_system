@@ -1,0 +1,28 @@
+[
+    {
+        "student_name": "Lera Khylchenko",
+        "album": "21279",
+        "specialization": "Informatyka",
+        "academic_year": "2026",
+        "practice_place": "Infosys",
+        "start_date": "2026-09-01",
+        "end_date": "2026-12-30",
+        "attachments": "",
+        "entries": [
+            {
+                "day": "pierwszy",
+                "date": "2026-09-01",
+                "description": "dzialalam",
+                "effects_numbers": "1",
+                "supervisor": "Yuna"
+            },
+            {
+                "day": "drugi",
+                "date": "2026-09-02",
+                "description": "to samo",
+                "effects_numbers": "2",
+                "supervisor": "Yuna"
+            }
+        ]
+    }
+]

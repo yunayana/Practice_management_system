@@ -1,0 +1,48 @@
+[
+    {
+        "student_name": "Jan Kowalski",
+        "album": "12345",
+        "specialty": "Informatyka stosowana",
+        "hours": "160",
+        "effects": {
+            "01": true,
+            "02": true,
+            "03": true,
+            "04": true,
+            "05": true,
+            "06": true,
+            "07": true,
+            "08": true,
+            "09": true,
+            "10": true,
+            "11": true,
+            "12": true,
+            "13": true
+        },
+        "company_supervisor_note": "POTWIERDZAM",
+        "university_supervisor_opinion": "POTWIERDZAM"
+    },
+    {
+        "student_name": "Lera Khylchenko",
+        "album": "21279",
+        "specialty": "Informatyka stosowana",
+        "hours": "720",
+        "effects": {
+            "01": true,
+            "02": true,
+            "03": true,
+            "04": false,
+            "05": true,
+            "06": true,
+            "07": true,
+            "08": true,
+            "09": true,
+            "10": true,
+            "11": true,
+            "12": true,
+            "13": true
+        },
+        "company_supervisor_note": "potwierdzam",
+        "university_supervisor_opinion": "potwierdzam"
+    }
+]
