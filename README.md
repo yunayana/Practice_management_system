@@ -187,6 +187,3 @@ Poniższa lista pokazuje, jak diagramy odnoszą się do wymagań funkcjonalnych 
 - **F9–F10** – wystawienie oceny końcowej i wygenerowanie raportu PDF.
 - **F12** – archiwizacja zatwierdzonej dokumentacji.
 
-## Podsumowanie projektu
-
-Repozytorium prezentuje model logiki biznesowej systemu obsługi praktyk zawodowych za pomocą diagramów Mermaid osadzonych bezpośrednio w README. Takie rozwiązanie pozwala zachować czytelność dokumentacji, łatwość edycji oraz dobrą widoczność projektu na GitHubie bez potrzeby używania plików PNG lub zrzutów ekranu. [file:1][web:53][web:54]
