@@ -1,0 +1,111 @@
+erDiagram
+
+    users {
+        int id PK
+        text full_name
+        text email UK
+        text password_hash
+        text role
+        int is_active
+        text created_at
+        text updated_at
+    }
+
+    students {
+        int id PK
+        int user_id FK
+        text album UK
+        text specialization
+        text academic_year
+        text created_at
+        text updated_at
+    }
+
+    supervisors {
+        int id PK
+        int user_id FK
+        text supervisor_type
+        text department
+        text created_at
+        text updated_at
+    }
+
+    practices {
+        int id PK
+        int student_id FK
+        text company_name
+        text start_date
+        text end_date
+        int hours
+        text status
+        int university_supervisor_id FK
+        int company_supervisor_id FK
+        text grade
+        text attachments_notes
+        text created_at
+        text updated_at
+    }
+
+    practice_journals {
+        int id PK
+        int practice_id FK
+        text status
+        text created_at
+        text updated_at
+    }
+
+    journal_entries {
+        int id PK
+        int journal_id FK
+        int day_number
+        text entry_date
+        text description
+        text effects_numbers
+        text supervisor_signature
+        text created_at
+    }
+
+    learning_effects {
+        int id PK
+        text code UK
+        text description
+    }
+
+    effects_confirmations {
+        int id PK
+        int practice_id FK
+        text company_supervisor_note
+        text university_supervisor_opinion
+        text status
+        text created_at
+        text updated_at
+    }
+
+    effects_confirmation_items {
+        int id PK
+        int confirmation_id FK
+        int effect_id FK
+        int confirmed
+    }
+
+    supervisor_comments {
+        int id PK
+        int practice_id FK
+        int supervisor_id FK
+        text document_type
+        text content
+        text created_at
+    }
+
+    users ||--o| students : "jest"
+    users ||--o| supervisors : "jest"
+    students ||--o{ practices : "odbywa"
+    supervisors ||--o{ practices : "nadzoruje (uczelniany)"
+    supervisors ||--o{ practices : "nadzoruje (zakladowy)"
+    practices ||--|| practice_journals : "ma"
+    practice_journals ||--o{ journal_entries : "zawiera"
+    practices ||--|| effects_confirmations : "ma"
+    effects_confirmations ||--|{ effects_confirmation_items : "zawiera"
+    learning_effects ||--|{ effects_confirmation_items : "dotyczy"
+    practices ||--o{ supervisor_comments : "otrzymuje"
+    supervisors ||--o{ supervisor_comments : "dodaje"
