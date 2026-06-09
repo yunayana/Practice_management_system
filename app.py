@@ -176,3 +176,7 @@ def edytuj_dziennik(album):
     journals = load_journals()
     student = next((s for s in journals if s.get("album") == album), None)
     return render_template("dziennik.html", data=student)
+
+
+if __name__ == "__main__":
+    app.run(debug=True, host="127.0.0.1", port=5000)
