@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Opracowanie projektu bazy danych – Aplikacja do obsługi praktyk</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.6.1/mermaid.min.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: Arial, sans-serif; font-size: 14px; line-height: 1.6; color: #222; background: #f8f9fa; }
+  .page { max-width: 960px; margin: 0 auto; background: #fff; padding: 40px 60px; }
+
+  /* Typography */
+  h1 { font-size: 26px; color: #1F3864; border-bottom: 3px solid #2E5FA3; padding-bottom: 8px; margin: 40px 0 16px; }
+  h2 { font-size: 18px; color: #2E5FA3; margin: 28px 0 10px; }
+  p  { margin-bottom: 12px; }
+  ul { margin: 8px 0 12px 28px; }
+  ul li { margin-bottom: 5px; }
+  code, pre { font-family: 'Courier New', monospace; font-size: 12px; background: #f4f4f4; border-radius: 4px; }
+  pre { padding: 14px 18px; margin: 10px 0 16px; overflow-x: auto; border-left: 4px solid #2E5FA3; }
+
+  /* Title */
+  .title-block { text-align: center; padding: 60px 0 40px; border-bottom: 2px solid #2E5FA3; margin-bottom: 40px; }
+  .title-block h1 { font-size: 32px; border: none; padding: 0; margin: 0 0 10px; }
+  .title-block .subtitle { font-size: 20px; color: #2E5FA3; margin-bottom: 20px; }
+  .title-block .meta { color: #666; font-size: 14px; }
+
+  /* Tables */
+  table { width: 100%; border-collapse: collapse; margin: 12px 0 20px; font-size: 13px; }
+  th { background: #2E5FA3; color: #fff; padding: 10px 12px; text-align: left; }
+  td { padding: 8px 12px; border-bottom: 1px solid #ddd; vertical-align: top; }
+  tr:nth-child(even) td { background: #f2f6fc; }
+  tr:hover td { background: #e8f0fb; }
+  .entity-name { font-weight: bold; color: #1F3864; margin: 20px 0 6px; font-size: 14px; }
+  .pk { color: #c00; font-weight: bold; }
+  .fk { color: #0066cc; }
+
+  /* Badges */
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: bold; margin-right: 4px; }
+  .badge-pk { background: #fee2e2; color: #c00; }
+  .badge-fk { background: #dbeafe; color: #1d4ed8; }
+  .badge-uq { background: #dcfce7; color: #166534; }
+
+  /* Mermaid */
+  .mermaid { text-align: center; margin: 20px 0; background: #f8faff; padding: 20px; border-radius: 8px; border: 1px solid #dde; }
+
+  /* Comparison table */
+  .compare th:first-child { width: 25%; }
+  .compare th:nth-child(2), .compare th:nth-child(3) { width: 37.5%; }
+
+  /* Print */
+  @media print {
+    body { background: white; }
+    .page { padding: 20px; }
+    h1 { page-break-before: always; }
+    h1:first-of-type { page-break-before: avoid; }
+    .no-break { page-break-inside: avoid; }
+    pre { white-space: pre-wrap; }
+  }
+
+  /* Sections */
+  .section { margin-bottom: 40px; }
+  .info-box { background: #e8f4fd; border-left: 4px solid #2E5FA3; padding: 12px 16px; margin: 12px 0; border-radius: 0 4px 4px 0; }
+  .warn-box { background: #fff8e1; border-left: 4px solid #f59e0b; padding: 12px 16px; margin: 12px 0; border-radius: 0 4px 4px 0; }
+</style>
+</head>
+<body>
+<div class="page">
+
+<!-- STRONA TYTUŁOWA -->
+<div class="title-block">
+  <h1>Opracowanie projektu bazy danych</h1>
+  <div class="subtitle">Aplikacja do obsługi praktyk zawodowych</div>
+  <div class="meta">
+    Laboratorium 6 &bull; Projektowanie bazy danych<br>
+    Czerwiec 2026
+  </div>
+</div>
+
+<!-- ZADANIE 1 -->
+<div class="section">
+<h1>Zadanie 1. Schemat ERD bazy danych</h1>
+
+<p>Na podstawie analizy wymagań projektu oraz kodu źródłowego aplikacji (app.py, pliki JSON) zidentyfikowano 10 encji systemu. Aplikacja obsługuje cztery role użytkowników: studenta, opiekuna uczelnianego, opiekuna zakładowego oraz sekretariat, a jej głównym zadaniem jest cyfrowe prowadzenie dziennika praktyk i dokumentacji efektów uczenia się.</p>
+
+<h2>1.1 Diagram ERD</h2>
+<div class="mermaid">
+erDiagram
+    users {
+        int id PK
+        text full_name
+        text email UK
+        text password_hash
+        text role
+        int is_active
+        text created_at
+        text updated_at
+    }
+    students {
+        int id PK
+        int user_id FK
+        text album UK
+        text specialization
+        text academic_year
+        text created_at
+        text updated_at
+    }
+    supervisors {
+        int id PK
+        int user_id FK
+        text supervisor_type
+        text department
+        text created_at
+        text updated_at
+    }
+    practices {
+        int id PK
+        int student_id FK
+        text company_name
+        text start_date
+        text end_date
+        int hours
+        text status
+        int university_supervisor_id FK
+        int company_supervisor_id FK
+        text grade
+        text created_at
+        text updated_at
+    }
+    practice_journals {
+        int id PK
+        int practice_id FK
+        text status
+        text created_at
+        text updated_at
+    }
+    journal_entries {
+        int id PK
+        int journal_id FK
+        int day_number
+        text entry_date
+        text description
+        text effects_numbers
+        text supervisor_signature
+        text created_at
+    }
+    learning_effects {
+        int id PK
+        text code UK
+        text description
+    }
+    effects_confirmations {
+        int id PK
+        int practice_id FK
+        text company_supervisor_note
+        text university_supervisor_opinion
+        text status
+        text created_at
+        text updated_at
+    }
+    effects_confirmation_items {
+        int id PK
+        int confirmation_id FK
+        int effect_id FK
+        int confirmed
+    }
+    supervisor_comments {
+        int id PK
+        int practice_id FK
+        int supervisor_id FK
+        text document_type
+        text content
+        text created_at
+    }
+
+    users ||--o| students : "jest"
+    users ||--o| supervisors : "jest"
+    students ||--o{ practices : "odbywa"
+    supervisors ||--o{ practices : "nadzoruje (uczelniany)"
+    supervisors ||--o{ practices : "nadzoruje (zakladowy)"
+    practices ||--|| practice_journals : "ma"
+    practice_journals ||--o{ journal_entries : "zawiera"
+    practices ||--|| effects_confirmations : "ma"
+    effects_confirmations ||--|{ effects_confirmation_items : "zawiera"
+    learning_effects ||--|{ effects_confirmation_items : "dotyczy"
+    practices ||--o{ supervisor_comments : "otrzymuje"
+    supervisors ||--o{ supervisor_comments : "dodaje"
+</div>
+
+<h2>1.2 Encje i ich atrybuty</h2>
+
+<div class="no-break">
+<p class="entity-name">users – użytkownicy systemu (encja bazowa dla wszystkich ról)</p>
+<table>
+  <tr><th>Kolumna</th><th>Typ</th><th>Ograniczenia</th><th>Opis</th></tr>
+  <tr><td><span class="badge badge-pk">PK</span> id</td><td>INTEGER</td><td>AUTOINCREMENT</td><td>Klucz główny</td></tr>
+  <tr><td>full_name</td><td>TEXT</td><td>NOT NULL</td><td>Imię i nazwisko</td></tr>
+  <tr><td>email</td><td>TEXT</td><td>NOT NULL, <span class="badge badge-uq">UNIQUE</span></td><td>Adres e-mail (login do systemu)</td></tr>
+  <tr><td>password_hash</td><td>TEXT</td><td>NOT NULL</td><td>Skrót hasła (bcrypt)</td></tr>
+  <tr><td>role</td><td>TEXT</td><td>NOT NULL, CHECK</td><td>Rola: student / uczelniany / zakladowy / sekretariat</td></tr>
+  <tr><td>is_active</td><td>INTEGER</td><td>NOT NULL, DEFAULT 1</td><td>Flaga aktywności konta (0/1)</td></tr>
+  <tr><td>created_at</td><td>TEXT</td><td>DEFAULT datetime('now')</td><td>Data utworzenia rekordu</td></tr>
+  <tr><td>updated_at</td><td>TEXT</td><td>DEFAULT datetime('now')</td><td>Data ostatniej modyfikacji</td></tr>
+</table>
+</div>
+
+<div class="no-break">
+<p class="entity-name">students – profil studenta (rozszerzenie encji users, relacja 1:1)</p>
+<table>
+  <tr><th>Kolumna</th><th>Typ</th><th>Ograniczenia</th><th>Opis</th></tr>
+  <tr><td><span class="badge badge-pk">PK</span> id</td><td>INTEGER</td><td>AUTOINCREMENT</td><td>Klucz główny</td></tr>
+  <tr><td><span class="badge badge-fk">FK</span> user_id</td><td>INTEGER</td><td>NOT NULL, UNIQUE</td><td>Powiązanie z kontem użytkownika</td></tr>
+  <tr><td>album</td><td>TEXT</td><td>NOT NULL, <span class="badge badge-uq">UNIQUE</span></td><td>Numer albumu studenta</td></tr>
+  <tr><td>specialization</td><td>TEXT</td><td>NOT NULL</td><td>Kierunek / specjalizacja</td></tr>
+  <tr><td>academic_year</td><td>TEXT</td><td>NOT NULL</td><td>Rok akademicki (np. 2025/2026)</td></tr>
+  <tr><td>created_at / updated_at</td><td>TEXT</td><td>DEFAULT datetime('now')</td><td>Znaczniki czasu</td></tr>
+</table>
+</div>
+
+<div class="no-break">
+<p class="entity-name">supervisors – profil opiekuna (uczelniany / zakładowy / sekretariat)</p>
+<table>
+  <tr><th>Kolumna</th><th>Typ</th><th>Ograniczenia</th><th>Opis</th></tr>
+  <tr><td><span class="badge badge-pk">PK</span> id</td><td>INTEGER</td><td>AUTOINCREMENT</td><td>Klucz główny</td></tr>
+  <tr><td><span class="badge badge-fk">FK</span> user_id</td><td>INTEGER</td><td>NOT NULL, UNIQUE</td><td>Powiązanie z kontem użytkownika</td></tr>
+  <tr><td>supervisor_type</td><td>TEXT</td><td>NOT NULL, CHECK</td><td>Typ: uczelniany / zakladowy / sekretariat</td></tr>
+  <tr><td>department</td><td>TEXT</td><td>–</td><td>Wydział lub jednostka organizacyjna</td></tr>
+  <tr><td>created_at / updated_at</td><td>TEXT</td><td>DEFAULT datetime('now')</td><td>Znaczniki czasu</td></tr>
+</table>
+</div>
+
+<div class="no-break">
+<p class="entity-name">practices – praktyka zawodowa (główna encja dokumentu)</p>
+<table>
+  <tr><th>Kolumna</th><th>Typ</th><th>Ograniczenia</th><th>Opis</th></tr>
+  <tr><td><span class="badge badge-pk">PK</span> id</td><td>INTEGER</td><td>AUTOINCREMENT</td><td>Klucz główny</td></tr>
+  <tr><td><span class="badge badge-fk">FK</span> student_id</td><td>INTEGER</td><td>NOT NULL</td><td>Student odbywający praktykę</td></tr>
+  <tr><td>company_name</td><td>TEXT</td><td>NOT NULL</td><td>Nazwa firmy / miejsca praktyki</td></tr>
+  <tr><td>start_date</td><td>TEXT</td><td>NOT NULL</td><td>Data rozpoczęcia</td></tr>
+  <tr><td>end_date</td><td>TEXT</td><td>NOT NULL</td><td>Data zakończenia</td></tr>
+  <tr><td>hours</td><td>INTEGER</td><td>–</td><td>Liczba godzin praktyki</td></tr>
+  <tr><td>status</td><td>TEXT</td><td>NOT NULL, CHECK, DEFAULT Draft</td><td>Stan: Draft / Submitted / Under_Review / Rejected / Approved / Closed</td></tr>
+  <tr><td><span class="badge badge-fk">FK</span> university_supervisor_id</td><td>INTEGER</td><td>–</td><td>Opiekun uczelniany</td></tr>
+  <tr><td><span class="badge badge-fk">FK</span> company_supervisor_id</td><td>INTEGER</td><td>–</td><td>Opiekun zakładowy</td></tr>
+  <tr><td>grade</td><td>TEXT</td><td>–</td><td>Ocena końcowa</td></tr>
+  <tr><td>created_at / updated_at</td><td>TEXT</td><td>DEFAULT datetime('now')</td><td>Znaczniki czasu</td></tr>
+</table>
+</div>
+
+<div class="no-break">
+<p class="entity-name">practice_journals – dziennik praktyki (relacja 1:1 z practices)</p>
+<table>
+  <tr><th>Kolumna</th><th>Typ</th><th>Ograniczenia</th><th>Opis</th></tr>
+  <tr><td><span class="badge badge-pk">PK</span> id</td><td>INTEGER</td><td>AUTOINCREMENT</td><td>Klucz główny</td></tr>
+  <tr><td><span class="badge badge-fk">FK</span> practice_id</td><td>INTEGER</td><td>NOT NULL, UNIQUE</td><td>Powiązana praktyka (każda ma jeden dziennik)</td></tr>
+  <tr><td>status</td><td>TEXT</td><td>NOT NULL, CHECK, DEFAULT Draft</td><td>Status dziennika (cykl życia)</td></tr>
+  <tr><td>created_at / updated_at</td><td>TEXT</td><td>DEFAULT datetime('now')</td><td>Znaczniki czasu</td></tr>
+</table>
+</div>
+
+<div class="no-break">
+<p class="entity-name">journal_entries – wpisy dziennika (relacja 1:N z practice_journals)</p>
+<table>
+  <tr><th>Kolumna</th><th>Typ</th><th>Ograniczenia</th><th>Opis</th></tr>
+  <tr><td><span class="badge badge-pk">PK</span> id</td><td>INTEGER</td><td>AUTOINCREMENT</td><td>Klucz główny</td></tr>
+  <tr><td><span class="badge badge-fk">FK</span> journal_id</td><td>INTEGER</td><td>NOT NULL</td><td>Przynależny dziennik</td></tr>
+  <tr><td>day_number</td><td>INTEGER</td><td>NOT NULL</td><td>Numer dnia praktyki</td></tr>
+  <tr><td>entry_date</td><td>TEXT</td><td>NOT NULL</td><td>Data wpisu (YYYY-MM-DD)</td></tr>
+  <tr><td>description</td><td>TEXT</td><td>NOT NULL</td><td>Opis wykonanych czynności</td></tr>
+  <tr><td>effects_numbers</td><td>TEXT</td><td>–</td><td>Numery efektów uczenia się (np. "1,3,5")</td></tr>
+  <tr><td>supervisor_signature</td><td>TEXT</td><td>–</td><td>Podpis/nazwa opiekuna zakładowego</td></tr>
+  <tr><td>created_at</td><td>TEXT</td><td>DEFAULT datetime('now')</td><td>Data dodania wpisu</td></tr>
+</table>
+</div>
+
+<div class="no-break">
+<p class="entity-name">learning_effects – słownik efektów uczenia się (01–13)</p>
+<table>
+  <tr><th>Kolumna</th><th>Typ</th><th>Ograniczenia</th><th>Opis</th></tr>
+  <tr><td><span class="badge badge-pk">PK</span> id</td><td>INTEGER</td><td>AUTOINCREMENT</td><td>Klucz główny</td></tr>
+  <tr><td>code</td><td>TEXT</td><td>NOT NULL, <span class="badge badge-uq">UNIQUE</span></td><td>Kod efektu: "01", "02", …, "13"</td></tr>
+  <tr><td>description</td><td>TEXT</td><td>NOT NULL</td><td>Treść efektu uczenia się</td></tr>
+</table>
+</div>
+
+<div class="no-break">
+<p class="entity-name">effects_confirmations – potwierdzenie efektów (relacja 1:1 z practices)</p>
+<table>
+  <tr><th>Kolumna</th><th>Typ</th><th>Ograniczenia</th><th>Opis</th></tr>
+  <tr><td><span class="badge badge-pk">PK</span> id</td><td>INTEGER</td><td>AUTOINCREMENT</td><td>Klucz główny</td></tr>
+  <tr><td><span class="badge badge-fk">FK</span> practice_id</td><td>INTEGER</td><td>NOT NULL, UNIQUE</td><td>Powiązana praktyka</td></tr>
+  <tr><td>company_supervisor_note</td><td>TEXT</td><td>–</td><td>Uwaga opiekuna zakładowego</td></tr>
+  <tr><td>university_supervisor_opinion</td><td>TEXT</td><td>–</td><td>Opinia opiekuna uczelnianego</td></tr>
+  <tr><td>status</td><td>TEXT</td><td>NOT NULL, CHECK, DEFAULT Draft</td><td>Status potwierdzenia</td></tr>
+  <tr><td>created_at / updated_at</td><td>TEXT</td><td>DEFAULT datetime('now')</td><td>Znaczniki czasu</td></tr>
+</table>
+</div>
+
+<div class="no-break">
+<p class="entity-name">effects_confirmation_items – encja pośrednia N:M (potwierdzenie ↔ efekty)</p>
+<table>
+  <tr><th>Kolumna</th><th>Typ</th><th>Ograniczenia</th><th>Opis</th></tr>
+  <tr><td><span class="badge badge-pk">PK</span> id</td><td>INTEGER</td><td>AUTOINCREMENT</td><td>Klucz główny</td></tr>
+  <tr><td><span class="badge badge-fk">FK</span> confirmation_id</td><td>INTEGER</td><td>NOT NULL</td><td>Powiązane potwierdzenie efektów</td></tr>
+  <tr><td><span class="badge badge-fk">FK</span> effect_id</td><td>INTEGER</td><td>NOT NULL</td><td>Efekt uczenia się</td></tr>
+  <tr><td>confirmed</td><td>INTEGER</td><td>NOT NULL, CHECK (0 lub 1)</td><td>Czy efekt został potwierdzony</td></tr>
+  <tr><td colspan="4" style="font-style:italic; color:#555">UNIQUE(confirmation_id, effect_id) – klucz złożony zapobiega duplikatom</td></tr>
+</table>
+</div>
+
+<div class="no-break">
+<p class="entity-name">supervisor_comments – uwagi opiekuna do dokumentów</p>
+<table>
+  <tr><th>Kolumna</th><th>Typ</th><th>Ograniczenia</th><th>Opis</th></tr>
+  <tr><td><span class="badge badge-pk">PK</span> id</td><td>INTEGER</td><td>AUTOINCREMENT</td><td>Klucz główny</td></tr>
+  <tr><td><span class="badge badge-fk">FK</span> practice_id</td><td>INTEGER</td><td>NOT NULL</td><td>Powiązana praktyka</td></tr>
+  <tr><td><span class="badge badge-fk">FK</span> supervisor_id</td><td>INTEGER</td><td>NOT NULL</td><td>Autor uwagi (opiekun)</td></tr>
+  <tr><td>document_type</td><td>TEXT</td><td>NOT NULL, CHECK</td><td>Typ: journal / effects_confirmation</td></tr>
+  <tr><td>content</td><td>TEXT</td><td>NOT NULL</td><td>Treść uwagi</td></tr>
+  <tr><td>created_at</td><td>TEXT</td><td>DEFAULT datetime('now')</td><td>Data dodania uwagi</td></tr>
+</table>
+</div>
+
+<h2>1.3 Relacje między encjami i ich krotności</h2>
+<table>
+  <tr><th>Encja (od)</th><th>Encja (do)</th><th>Krotność</th><th>Opis relacji</th></tr>
+  <tr><td>users</td><td>students</td><td>1:1</td><td>Jeden użytkownik może być jednym studentem</td></tr>
+  <tr><td>users</td><td>supervisors</td><td>1:1</td><td>Jeden użytkownik może być jednym opiekunem</td></tr>
+  <tr><td>students</td><td>practices</td><td>1:N</td><td>Student może odbywać wiele praktyk (kolejne lata)</td></tr>
+  <tr><td>supervisors</td><td>practices</td><td>1:N</td><td>Opiekun uczelniany nadzoruje wiele praktyk</td></tr>
+  <tr><td>supervisors</td><td>practices</td><td>1:N</td><td>Opiekun zakładowy nadzoruje wiele praktyk</td></tr>
+  <tr><td>practices</td><td>practice_journals</td><td>1:1</td><td>Każda praktyka ma dokładnie jeden dziennik</td></tr>
+  <tr><td>practice_journals</td><td>journal_entries</td><td>1:N</td><td>Dziennik zawiera wiele wpisów dziennych</td></tr>
+  <tr><td>practices</td><td>effects_confirmations</td><td>1:1</td><td>Każda praktyka ma jedno potwierdzenie efektów</td></tr>
+  <tr><td>effects_confirmations</td><td>learning_effects</td><td>N:M</td><td>Przez tabelę pośrednią effects_confirmation_items</td></tr>
+  <tr><td>practices</td><td>supervisor_comments</td><td>1:N</td><td>Do praktyki można dodać wiele uwag</td></tr>
+  <tr><td>supervisors</td><td>supervisor_comments</td><td>1:N</td><td>Opiekun może dodać uwagi do wielu dokumentów</td></tr>
+</table>
+</div>
+
+<!-- ZADANIE 2 -->
+<div class="section">
+<h1>Zadanie 2. Szkielet tabel w SQL</h1>
+
+<p>Na podstawie diagramu ERD przygotowano plik <strong>baza_danych.sql</strong> zawierający instrukcje CREATE TABLE dla wszystkich 10 tabel. Poniżej przedstawiono kluczowe fragmenty schematu z omówieniem decyzji projektowych.</p>
+
+<h2>2.1 Tabela users – baza użytkowników</h2>
+<pre>CREATE TABLE users (
+    id            INTEGER PRIMARY KEY AUTOINCREMENT,
+    full_name     TEXT    NOT NULL,
+    email         TEXT    NOT NULL UNIQUE,
+    password_hash TEXT    NOT NULL,
+    role          TEXT    NOT NULL CHECK (role IN
+                    ('student','uczelniany','zakladowy','sekretariat')),
+    is_active     INTEGER NOT NULL DEFAULT 1,
+    created_at    TEXT    NOT NULL DEFAULT (datetime('now')),
+    updated_at    TEXT    NOT NULL DEFAULT (datetime('now'))
+);</pre>
+
+<h2>2.2 Tabela practices – główna encja dokumentu</h2>
+<pre>CREATE TABLE practices (
+    id                       INTEGER PRIMARY KEY AUTOINCREMENT,
+    student_id               INTEGER NOT NULL,
+    company_name             TEXT    NOT NULL,
+    start_date               TEXT    NOT NULL,
+    end_date                 TEXT    NOT NULL,
+    hours                    INTEGER,
+    status                   TEXT    NOT NULL DEFAULT 'Draft'
+                             CHECK (status IN ('Draft','Submitted',
+                             'Under_Review','Rejected','Approved','Closed')),
+    university_supervisor_id INTEGER,
+    company_supervisor_id    INTEGER,
+    grade                    TEXT,
+    created_at               TEXT NOT NULL DEFAULT (datetime('now')),
+    updated_at               TEXT NOT NULL DEFAULT (datetime('now')),
+    FOREIGN KEY (student_id)               REFERENCES students(id),
+    FOREIGN KEY (university_supervisor_id) REFERENCES supervisors(id),
+    FOREIGN KEY (company_supervisor_id)    REFERENCES supervisors(id)
+);</pre>
+
+<h2>2.3 Encja pośrednia dla relacji N:M</h2>
+<pre>CREATE TABLE effects_confirmation_items (
+    id              INTEGER PRIMARY KEY AUTOINCREMENT,
+    confirmation_id INTEGER NOT NULL,
+    effect_id       INTEGER NOT NULL,
+    confirmed       INTEGER NOT NULL DEFAULT 0 CHECK (confirmed IN (0,1)),
+    UNIQUE (confirmation_id, effect_id),
+    FOREIGN KEY (confirmation_id) REFERENCES effects_confirmations(id),
+    FOREIGN KEY (effect_id)       REFERENCES learning_effects(id)
+);</pre>
+
+<div class="info-box">Pełny schemat wszystkich tabel (CREATE TABLE + dane słownikowe dla learning_effects) znajduje się w pliku <strong>baza_danych.sql</strong>.</div>
+
+<h2>2.4 Zasady projektowania schematu</h2>
+<ul>
+  <li><strong>Klucze główne:</strong> wszystkie tabele używają INTEGER PRIMARY KEY AUTOINCREMENT</li>
+  <li><strong>Klucze obce:</strong> zdefiniowane jako FOREIGN KEY...REFERENCES we wszystkich tabelach zależnych</li>
+  <li><strong>Integralność:</strong> pola obowiązkowe oznaczone NOT NULL, unikalność przez UNIQUE</li>
+  <li><strong>Ograniczenia domenowe:</strong> pola role i status walidowane przez CHECK</li>
+  <li><strong>Kolumny techniczne:</strong> created_at i updated_at z wartością domyślną datetime('now') w każdej tabeli</li>
+  <li><strong>Relacja N:M:</strong> zrealizowana przez tabelę pośrednią effects_confirmation_items z kluczem złożonym UNIQUE(confirmation_id, effect_id)</li>
+</ul>
+</div>
+
+<!-- ZADANIE 3 -->
+<div class="section">
+<h1>Zadanie 3. Dobór systemu bazy danych</h1>
+
+<h2>3.1 SQLite – wybór dla etapu prototypu</h2>
+<p>Na początkowym etapie projektu rekomenduje się <strong>SQLite</strong> jako silnik bazy danych. Uzasadnienie wyboru:</p>
+<ul>
+  <li>Jest wbudowana w standardową bibliotekę Pythona (moduł <code>sqlite3</code> – brak dodatkowej instalacji)</li>
+  <li>Nie wymaga osobnego serwera bazodanowego – baza to pojedynczy plik <code>.db</code></li>
+  <li>Bardzo prosta konfiguracja i uruchomienie w projekcie Flask</li>
+  <li>Wystarczająca wydajność dla prototypu i testów z kilkudziesięcioma użytkownikami</li>
+  <li>Możliwość łatwego wersjonowania bazy danych razem z kodem (plik .db w repozytorium)</li>
+  <li>Umożliwia szybkie opracowanie modelu danych oraz przetestowanie logiki biznesowej</li>
+</ul>
+
+<h2>3.2 Ograniczenia SQLite w kontekście dalszego rozwoju</h2>
+<div class="warn-box">SQLite ma istotne ograniczenia, które stają się problematyczne przy rozbudowie systemu:</div>
+<ul>
+  <li>Brak pełnej obsługi współbieżności – jednoczesne zapisy mogą powodować blokady (lock)</li>
+  <li>Ograniczone wsparcie dla ALTER TABLE (np. brak usuwania kolumn w starszych wersjach)</li>
+  <li>Brak uwierzytelniania użytkowników bazodanowych i zarządzania uprawnieniami</li>
+  <li>Nie nadaje się do wdrożenia wieloserwerowego ani na produkcji z wieloma równoczesnymi użytkownikami</li>
+  <li>Ograniczona obsługa typów danych (brak natywnego BOOLEAN, DATE, UUID)</li>
+</ul>
+
+<h2>3.3 Docelowa alternatywa: MariaDB</h2>
+<p>Dla wersji produkcyjnej lub przy skalowaniu systemu rekomenduje się przejście na <strong>MariaDB</strong> (fork MySQL). Uzasadnienie:</p>
+<ul>
+  <li>Pełna obsługa współbieżności i transakcji ACID</li>
+  <li>Zarządzanie użytkownikami i uprawnieniami na poziomie bazy danych</li>
+  <li>Lepsza wydajność przy większej liczbie użytkowników i dużych zbiorach danych</li>
+  <li>Szerokie wsparcie hostingów i serwisów chmurowych (AWS RDS, Azure, GCP)</li>
+  <li>Łatwa migracja z SQLite – schemat SQL jest w dużej mierze kompatybilny (drobne różnice składni)</li>
+</ul>
+
+<h2>3.4 Porównanie SQLite vs MariaDB</h2>
+<table class="compare">
+  <tr><th>Kryterium</th><th>SQLite</th><th>MariaDB</th></tr>
+  <tr><td>Instalacja</td><td>Brak (wbudowana w Python)</td><td>Wymagana instalacja serwera</td></tr>
+  <tr><td>Konfiguracja</td><td>Zerowa – plik .db</td><td>Plik konfiguracyjny, port, użytkownicy</td></tr>
+  <tr><td>Współbieżność</td><td>Ograniczona (WAL mode)</td><td>Pełna, wielowątkowa</td></tr>
+  <tr><td>Uwierzytelnianie</td><td>Brak</td><td>Użytkownicy i hasła BD</td></tr>
+  <tr><td>Produkcja</td><td>Nie zalecana</td><td>Tak – gotowa produkcyjnie</td></tr>
+  <tr><td>Migracja danych</td><td>Eksport CSV / INSERT</td><td>mysqldump, narzędzia migracji</td></tr>
+  <tr><td>Wdrożenie studenckie</td><td>Idealna do prototypu</td><td>Nadmierna złożoność na starcie</td></tr>
+  <tr><td>Integracja z Flask</td><td>sqlite3 (stdlib) lub SQLAlchemy</td><td>PyMySQL + SQLAlchemy</td></tr>
+</table>
+
+<div class="info-box"><strong>Rekomendacja:</strong> SQLite na etapie laboratoryjnym i prototypu. Migracja na MariaDB przed wdrożeniem produkcyjnym. Flask-SQLAlchemy jako ORM pozwoli zmienić silnik bazy przy minimalnych zmianach kodu aplikacji.</div>
+</div>
+
+<!-- ZADANIE 4 -->
+<div class="section">
+<h1>Zadanie 4. Narzędzie do prototypowania bazy danych: DBeaver Community</h1>
+
+<h2>4.1 Opis narzędzia</h2>
+<p><strong>DBeaver Community</strong> to darmowe, wieloplatformowe narzędzie do zarządzania bazami danych, dostępne na Windows, macOS i Linux (<a href="https://dbeaver.io" target="_blank">dbeaver.io</a>). Jest rekomendowane jako alternatywa dla MySQL Workbench ze względu na szersze możliwości i lepszą kompatybilność z różnymi silnikami baz danych.</p>
+
+<h2>4.2 Kluczowe funkcje w kontekście projektu</h2>
+<ul>
+  <li>Obsługa wielu silników bazodanowych – SQLite, MySQL, MariaDB, PostgreSQL, Oracle i inne w jednym narzędziu</li>
+  <li>Edytor SQL z podświetlaniem składni, autouzupełnianiem i historią zapytań</li>
+  <li>Przeglądanie schematu bazy danych – graficzna prezentacja tabel, kolumn, indeksów i kluczy obcych</li>
+  <li>Tworzenie i edycja diagramów ER na podstawie istniejącego schematu (funkcja „ER Diagram")</li>
+  <li>Import i eksport danych w formatach CSV, SQL, JSON, Excel</li>
+  <li>Podgląd i edycja danych tabel bezpośrednio w interfejsie graficznym</li>
+  <li>Wsparcie dla migracji – można połączyć się z SQLite i MariaDB w jednym oknie i porównać schematy</li>
+</ul>
+
+<h2>4.3 Zastosowanie w projekcie</h2>
+<table>
+  <tr><th>Etap projektu</th><th>Zastosowanie DBeaver</th></tr>
+  <tr><td>Prototypowanie</td><td>Tworzenie i testowanie schematu SQLite, weryfikacja kluczy obcych</td></tr>
+  <tr><td>Weryfikacja danych</td><td>Podgląd zawartości tabel podczas testów aplikacji Flask</td></tr>
+  <tr><td>Generowanie ERD</td><td>Automatyczne generowanie diagramu ER z istniejącego schematu SQL</td></tr>
+  <tr><td>Migracja</td><td>Łączenie się z MariaDB i przenoszenie danych z SQLite</td></tr>
+  <tr><td>Dokumentacja</td><td>Eksport schematu do SQL i diagramów dla celów dokumentacyjnych</td></tr>
+</table>
+
+<h2>4.4 Jak połączyć DBeaver z bazą projektu</h2>
+<ul>
+  <li>Pobrać DBeaver Community ze strony <strong>dbeaver.io</strong> (bezpłatny)</li>
+  <li>Nowe połączenie → wybrać <strong>SQLite</strong> jako sterownik bazy danych</li>
+  <li>Wskazać plik <code>.db</code> projektu w katalogu aplikacji Flask</li>
+  <li>W zakładce „Database Navigator" przeglądać schemat tabel i dane</li>
+  <li>Prawy klik na bazę → <strong>View Diagram</strong> → automatyczny diagram ER z istniejącego schematu</li>
+</ul>
+</div>
+
+<!-- ZADANIE 5 -->
+<div class="section">
+<h1>Zadanie 5. Narzędzie do organizacji projektu bazy danych: Mermaid</h1>
+
+<h2>5.1 Opis narzędzia</h2>
+<p><strong>Mermaid</strong> to open-source'owe narzędzie do tworzenia diagramów w składni tekstowej (podobnej do Markdown). Diagramy są generowane automatycznie z kodu tekstowego, co eliminuje potrzebę ręcznego rysowania i ułatwia wersjonowanie wraz z kodem źródłowym projektu.</p>
+
+<h2>5.2 Uzasadnienie wyboru</h2>
+<ul>
+  <li><strong>Integracja z GitHub</strong> – GitHub natywnie renderuje bloki Mermaid w plikach README.md (widoczne już w tym projekcie)</li>
+  <li><strong>Wersjonowanie</strong> – diagram jako kod tekstowy można przechowywać w repozytorium Git i śledzić zmiany</li>
+  <li><strong>Wiele typów diagramów</strong> – ERD, sekwencja, stany, flowchart, Gantt (wszystkie potrzebne w projekcie)</li>
+  <li><strong>Brak potrzeby instalacji</strong> – dostępny online (mermaid.live), w VS Code i w GitHub</li>
+  <li><strong>Łatwość modyfikacji</strong> – zmiana diagramu to edycja tekstu, nie ręczne przesuwanie elementów</li>
+</ul>
+
+<h2>5.3 Wizualizacja przepływu danych w systemie</h2>
+<p>Poniższy diagram opisuje kompletny przepływ danych – od rejestracji studenta do archiwizacji dokumentacji:</p>
+
+<div class="mermaid">
+flowchart TD
+    A[Student rejestruje sie w systemie] --> B[Tworzy profil: users + students]
+    B --> C[Tworzy nowa praktyke\npractices status=Draft]
+    C --> D[Wypelnia dziennik\npractice_journals + journal_entries]
+    C --> E[Wypelnia potwierdzenie efektow\neffects_confirmations]
+    D --> F[Wysyla do weryfikacji\nstatus=Submitted]
+    E --> F
+    F --> G[System powiadamia opiekuna\nstatus=Under_Review]
+    G --> H{Dokument poprawny?}
+    H -- Nie --> I[Opiekun dodaje uwagi\nsupervisor_comments]
+    I --> J[status=Rejected\nStudent widzi uwagi]
+    J --> F
+    H -- Tak --> K[status=Approved]
+    K --> L[Opiekun wystawia ocene\npractices.grade]
+    L --> M[Generowanie raportu PDF]
+    M --> N[Sekretariat archiwizuje\nstatus=Closed]
+</div>
+
+<h2>5.4 Typy diagramów Mermaid użyte w projekcie</h2>
+<table>
+  <tr><th>Typ diagramu</th><th>Lokalizacja</th><th>Cel</th></tr>
+  <tr><td>erDiagram</td><td>erd_diagram.mermaid</td><td>Schemat encji i relacji bazy danych</td></tr>
+  <tr><td>flowchart TD</td><td>README.md – logika uprawnień</td><td>Kontrola dostępu do edycji dokumentu</td></tr>
+  <tr><td>flowchart TD</td><td>README.md – tworzenie dziennika</td><td>Przepływ pracy studenta</td></tr>
+  <tr><td>flowchart TD</td><td>README.md – weryfikacja opiekuna</td><td>Proces recenzji dokumentu</td></tr>
+  <tr><td>stateDiagram-v2</td><td>README.md – cykl życia dokumentu</td><td>Stany i przejścia statusu dokumentu</td></tr>
+  <tr><td>sequenceDiagram</td><td>README.md – weryfikacja dziennika</td><td>Interakcje między aktorami systemu</td></tr>
+</table>
+
+<h2>5.5 Fragment schematu ERD w składni Mermaid</h2>
+<pre>erDiagram
+    users ||--o| students : "jest"
+    users ||--o| supervisors : "jest"
+    students ||--o{ practices : "odbywa"
+    practices ||--|| practice_journals : "ma"
+    practices ||--|| effects_confirmations : "ma"
+    effects_confirmations ||--|{ effects_confirmation_items : "zawiera"
+    learning_effects ||--|{ effects_confirmation_items : "dotyczy"
+    practice_journals ||--o{ journal_entries : "zawiera"
+    practices ||--o{ supervisor_comments : "otrzymuje"
+    supervisors ||--o{ supervisor_comments : "dodaje"</pre>
+</div>
+
+
+</div><!-- .page -->
+<script>
+  mermaid.initialize({ startOnLoad: true, theme: 'default', securityLevel: 'loose' });
+</script>
+</body>
+</html>
