@@ -1,16 +1,16 @@
 :root {
-    --bg: #f4f7fb;
+    --bg: #f2f2f2;
     --surface: #ffffff;
-    --surface-2: #f9fbff;
+    --surface-2: #f7f7f7;
     --text: #1f2937;
     --muted: #6b7280;
-    --primary: #2563eb;
-    --primary-dark: #1d4ed8;
-    --border: #dbe3ee;
-    --success: #0f766e;
-    --danger: #dc2626;
-    --shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
-    --radius: 18px;
+    --primary: #374151;
+    --primary-dark: #1f2937;
+    --border: #d1d5db;
+    --success: #374151;
+    --danger: #6b7280;
+    --shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+    --radius: 6px;
 }
 
 * {
@@ -20,7 +20,7 @@
 body {
     margin: 0;
     font-family: "Segoe UI", Tahoma, sans-serif;
-    background: linear-gradient(180deg, #eef4ff 0%, #f8fbff 100%);
+    background: var(--bg);
     color: var(--text);
 }
 
@@ -36,7 +36,7 @@ a {
 }
 
 .sidebar {
-    background: #111827;
+    background: #1f2937;
     color: #f9fafb;
     padding: 24px 18px;
     display: flex;
@@ -53,40 +53,65 @@ a {
 .brand-badge {
     width: 48px;
     height: 48px;
-    border-radius: 14px;
-    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+    border-radius: 4px;
+    background: #374151;
+    border: 1px solid #4b5563;
     display: grid;
     place-items: center;
     font-weight: 700;
+    font-size: 15px;
 }
 
 .brand h1 {
     margin: 0;
-    font-size: 20px;
+    font-size: 18px;
+    font-weight: 600;
 }
 
 .brand p {
     margin: 4px 0 0;
     color: #9ca3af;
-    font-size: 14px;
+    font-size: 13px;
 }
 
 .sidebar-nav {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 4px;
 }
 
 .sidebar-nav a {
-    padding: 12px 14px;
-    border-radius: 12px;
-    color: #e5e7eb;
-    transition: 0.2s ease;
+    padding: 9px 12px;
+    border-radius: 4px;
+    color: #d1d5db;
+    font-size: 13px;
+    transition: 0.15s ease;
 }
 
 .sidebar-nav a:hover {
-    background: rgba(255,255,255,0.08);
+    background: rgba(255,255,255,0.07);
     color: #fff;
+}
+
+.sidebar-nav .nav-section {
+    font-size: 10px;
+    color: #6b7280;
+    padding: 10px 0 2px;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    font-weight: 600;
+}
+
+.sidebar-nav .nav-logout {
+    margin-top: auto;
+    color: #9ca3af;
+    border-top: 1px solid #374151;
+    padding-top: 12px;
+    margin-top: 12px;
+}
+
+.sidebar-nav .nav-logout:hover {
+    color: #f3f4f6;
 }
 
 .main-content {
@@ -95,16 +120,20 @@ a {
 
 .topbar {
     margin-bottom: 20px;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 16px;
 }
 
 .topbar h2 {
     margin: 0;
-    font-size: 28px;
+    font-size: 22px;
+    font-weight: 600;
 }
 
 .subtitle {
-    margin: 8px 0 0;
+    margin: 6px 0 0;
     color: var(--muted);
+    font-size: 13px;
 }
 
 .content-card {
@@ -126,13 +155,14 @@ a {
 button,
 input[type="submit"] {
     border: none;
-    border-radius: 12px;
-    padding: 12px 18px;
+    border-radius: 4px;
+    padding: 9px 16px;
     background: var(--primary);
     color: white;
-    font-weight: 600;
+    font-weight: 500;
+    font-size: 13px;
     cursor: pointer;
-    transition: 0.2s ease;
+    transition: 0.15s ease;
 }
 
 .btn:hover,
@@ -142,18 +172,22 @@ input[type="submit"]:hover {
 }
 
 .btn-secondary {
-    background: #e5eefc;
-    color: #1e3a8a;
+    background: #e5e7eb;
+    color: #374151;
+}
+
+.btn-secondary:hover {
+    background: #d1d5db;
 }
 
 .btn-danger {
-    background: #fee2e2;
-    color: #991b1b;
+    background: #f3f4f6;
+    color: #6b7280;
 }
 
 form {
     display: grid;
-    gap: 18px;
+    gap: 16px;
 }
 
 .form-grid {
@@ -164,8 +198,9 @@ form {
 
 label {
     display: grid;
-    gap: 8px;
-    font-weight: 600;
+    gap: 6px;
+    font-weight: 500;
+    font-size: 13px;
     color: #374151;
 }
 
@@ -174,11 +209,20 @@ textarea,
 select {
     width: 100%;
     border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 12px 14px;
+    border-radius: 4px;
+    padding: 9px 12px;
     font: inherit;
+    font-size: 13px;
     color: var(--text);
     background: #fff;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+    outline: 2px solid #9ca3af;
+    outline-offset: 0;
+    border-color: #9ca3af;
 }
 
 textarea {
@@ -190,24 +234,27 @@ table {
     width: 100%;
     border-collapse: collapse;
     background: var(--surface);
-    overflow: hidden;
-    border-radius: 14px;
+    font-size: 13px;
 }
 
 th, td {
     border: 1px solid var(--border);
-    padding: 12px;
+    padding: 10px 12px;
     text-align: left;
     vertical-align: top;
 }
 
 th {
     background: var(--surface-2);
-    font-size: 14px;
+    font-weight: 600;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    color: #6b7280;
 }
 
 tr:nth-child(even) td {
-    background: #fcfdff;
+    background: #fafafa;
 }
 
 .table-wrap {
@@ -216,15 +263,17 @@ tr:nth-child(even) td {
 
 .section-title {
     margin: 8px 0 0;
-    font-size: 20px;
+    font-size: 16px;
+    font-weight: 600;
 }
 
 .info-box {
-    background: #eff6ff;
-    color: #1e3a8a;
-    border: 1px solid #bfdbfe;
+    background: #f7f7f7;
+    color: #374151;
+    border: 1px solid var(--border);
     padding: 14px 16px;
-    border-radius: 14px;
+    border-radius: var(--radius);
+    font-size: 13px;
 }
 
 @media (max-width: 900px) {

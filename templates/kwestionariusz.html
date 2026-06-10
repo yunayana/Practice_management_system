@@ -1,0 +1,156 @@
+{% extends "base.html" %}
+
+{% block title %}Kwestionariusz ankiety{% endblock %}
+{% block page_title %}Kwestionariusz ankiety{% endblock %}
+{% block page_subtitle %}Formularz załącznika nr 5 – ocena jakości praktyki zawodowej{% endblock %}
+
+{% block content %}
+<div class="actions">
+    <a class="btn btn-secondary" href="{{ url_for('lista_ankiet') }}">Lista ankiet</a>
+</div>
+
+<div id="ankieta-errors" class="form-error-banner" style="display:none;"></div>
+<form id="ankieta-form" method="post" action="{{ url_for('kwestionariusz') }}" novalidate>
+
+    <h3 class="section-title">Dane studenta</h3>
+    <div class="form-grid">
+        <label>
+            Imię i nazwisko <span class="req">*</span>
+            <input type="text" name="student_name" id="a_student_name"
+                   value="{{ data.student_name if data else '' }}" required>
+            <span class="field-error" id="a-err-student_name"></span>
+        </label>
+        <label>
+            Nr albumu <span class="req">*</span>
+            <input type="text" name="album" id="a_album"
+                   value="{{ locked_album or (data.album if data else '') }}" required pattern="^\d{3,6}$"
+                   {% if locked_album %}readonly style="background:#f7f7f7;color:#6b7280;"{% endif %}>
+            <span class="field-error" id="a-err-album"></span>
+        </label>
+        <label>
+            Rok akademicki
+            <input type="text" name="academic_year"
+                   value="{{ data.academic_year if data else '' }}" placeholder="2024/2025">
+        </label>
+        <label>
+            Nazwa zakładu pracy
+            <input type="text" name="company_name"
+                   value="{{ data.company_name if data else '' }}">
+        </label>
+    </div>
+
+    <h3 class="section-title">Ocena praktyki (skala 1–5)</h3>
+    <div class="info-box">1 – bardzo źle, 2 – źle, 3 – dostatecznie, 4 – dobrze, 5 – bardzo dobrze</div>
+
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>Nr</th>
+                    <th>Pytanie</th>
+                    <th>1</th><th>2</th><th>3</th><th>4</th><th>5</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% set questions = [
+                    ('q1',  'Organizacja i przygotowanie miejsca praktyki'),
+                    ('q2',  'Zgodność zadań z kierunkiem / specjalnością studiów'),
+                    ('q3',  'Dostęp do sprzętu i oprogramowania'),
+                    ('q4',  'Dostępność i pomoc opiekuna zakładowego'),
+                    ('q5',  'Możliwość samodzielnego działania i podejmowania decyzji'),
+                    ('q6',  'Atmosfera w miejscu pracy'),
+                    ('q7',  'Stopień przygotowania uczelni do praktyk (program, dokumentacja)'),
+                    ('q8',  'Przydatność wiedzy zdobytej na uczelni w praktyce'),
+                    ('q9',  'Możliwość nabycia nowych kompetencji i umiejętności'),
+                    ('q10', 'Ogólna ocena praktyki'),
+                ] %}
+                {% for key, question in questions %}
+                <tr>
+                    <td style="text-align:center;font-weight:600;">{{ loop.index }}</td>
+                    <td>{{ question }}</td>
+                    {% for v in range(1, 6) %}
+                    <td style="text-align:center;">
+                        <input type="radio" name="{{ key }}" value="{{ v }}"
+                            {% if data and data.get(key)|int == v %}checked{% endif %}>
+                    </td>
+                    {% endfor %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <h3 class="section-title">Pytania otwarte</h3>
+    <label>
+        Co było najbardziej wartościowe podczas praktyki?
+        <textarea name="most_valuable" rows="3">{{ data.most_valuable if data else '' }}</textarea>
+    </label>
+    <label>
+        Co należałoby poprawić (organizacja, program, firma)?
+        <textarea name="improvements" rows="3">{{ data.improvements if data else '' }}</textarea>
+    </label>
+    <label>
+        Czy polecasz to miejsce praktyki innym studentom?
+        <select name="recommend">
+            <option value="">– wybierz –</option>
+            {% for v in ['Tak', 'Raczej tak', 'Nie wiem', 'Raczej nie', 'Nie'] %}
+            <option value="{{ v }}" {% if data and data.recommend == v %}selected{% endif %}>{{ v }}</option>
+            {% endfor %}
+        </select>
+    </label>
+    <label>
+        Dodatkowe uwagi i komentarze
+        <textarea name="comments" rows="3">{{ data.comments if data else '' }}</textarea>
+    </label>
+
+    <div class="actions">
+        <button type="submit">Zapisz ankietę</button>
+    </div>
+</form>
+
+<style>
+  .req { color: var(--danger); }
+  .field-error { display: block; color: var(--danger); font-size: 12px; margin-top: 2px; min-height: 16px; }
+  .input-invalid { border-color: var(--danger) !important; }
+  .form-error-banner { background: #fee2e2; color: var(--danger); border-radius: 8px;
+    padding: 12px 16px; margin-bottom: 16px; font-size: 14px; }
+</style>
+
+<script>
+(function () {
+  const FIELDS = [
+    { id: "a_student_name", label: "Imię i nazwisko", check: v => v.trim().length >= 3 },
+    { id: "a_album",        label: "Nr albumu",       check: v => /^\d{3,6}$/.test(v.trim()) },
+  ];
+
+  function validateField(f) {
+    const el  = document.getElementById(f.id);
+    const key = f.id.replace(/^a_/, "");
+    const err = document.getElementById("a-err-" + key);
+    const ok  = f.check(el.value);
+    el.classList.toggle("input-invalid", !ok);
+    if (err) err.textContent = ok ? "" : `Pole „${f.label}" jest wymagane lub nieprawidłowe.`;
+    return ok;
+  }
+
+  document.addEventListener("DOMContentLoaded", function () {
+    const form = document.getElementById("ankieta-form");
+    FIELDS.forEach(f => {
+      const el = document.getElementById(f.id);
+      if (el) el.addEventListener("blur", () => validateField(f));
+    });
+    form.addEventListener("submit", function (e) {
+      const errors = FIELDS.filter(f => !validateField(f));
+      if (errors.length > 0) {
+        e.preventDefault();
+        const banner = document.getElementById("ankieta-errors");
+        banner.style.display = "block";
+        banner.innerHTML = "<strong>Proszę poprawić następujące pola:</strong><ul style='margin:6px 0 0 16px'>"
+          + errors.map(f => `<li>${f.label}</li>`).join("") + "</ul>";
+        banner.scrollIntoView({ behavior: "smooth" });
+      }
+    });
+  });
+})();
+</script>
+{% endblock %}

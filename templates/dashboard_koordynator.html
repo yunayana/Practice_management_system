@@ -1,0 +1,244 @@
+{% extends "base.html" %}
+
+{% block title %}Pulpit – Koordynator{% endblock %}
+{% block page_title %}Witaj, {{ user.full_name }}!{% endblock %}
+{% block page_subtitle %}Koordynator praktyk &bull; {{ user.email }}{% endblock %}
+
+{% block content %}
+
+<!-- Wykresy -->
+{% if completion %}
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px;">
+
+    <!-- Wykres słupkowy: liczba dokumentów per załącznik -->
+    <div style="padding:16px;background:#fff;border:1px solid #d1d5db;border-radius:4px;">
+        <strong style="font-size:13px;display:block;margin-bottom:12px;">Złożone dokumenty wg załącznika</strong>
+        <canvas id="chart-bar" height="200"></canvas>
+    </div>
+
+    <!-- Wykres kołowy: studenci z kompletem vs niekompletni -->
+    <div style="padding:16px;background:#fff;border:1px solid #d1d5db;border-radius:4px;">
+        <strong style="font-size:13px;display:block;margin-bottom:12px;">Kompletność dokumentacji</strong>
+        <canvas id="chart-doughnut" height="200"></canvas>
+    </div>
+
+</div>
+{% endif %}
+
+<!-- Statystyki dokumentów -->
+<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin-bottom:20px;">
+    {% set stat_items = [
+        (stats.karty,         'Karty (Zał. 3)',       'lista_kart'),
+        (stats.potwierdzenia, 'Potwierdzenia (Zał. 4)','lista_potwierdzen'),
+        (stats.ankiety,       'Ankiety (Zał. 5)',      'lista_ankiet'),
+        (stats.dzienniki,     'Dzienniki (Zał. 6)',    'lista_dziennikow'),
+        (stats.sprawozdania,  'Sprawozdania (Zał. 7)', 'lista_sprawozdan'),
+    ] %}
+    {% for count, label, route in stat_items %}
+    <a href="{{ url_for(route) }}" style="padding:14px 16px;background:#fff;border:1px solid #d1d5db;border-radius:4px;text-decoration:none;color:#1f2937;display:block;">
+        <div style="font-size:22px;font-weight:700;color:#374151;">{{ count }}</div>
+        <div style="font-size:12px;color:#6b7280;margin-top:2px;">{{ label }}</div>
+    </a>
+    {% endfor %}
+</div>
+
+<!-- Stopień kompletności dokumentacji -->
+<h3 class="section-title">Stan kompletności dokumentacji</h3>
+
+{% if completion %}
+<div class="table-wrap">
+    <table>
+        <thead>
+            <tr>
+                <th>Nr albumu</th>
+                <th>Student</th>
+                <th>Zał. 3</th>
+                <th>Zał. 4</th>
+                <th>Zał. 5</th>
+                <th>Zał. 6</th>
+                <th>Zał. 7</th>
+                <th>Kompletność</th>
+                <th>Akcja</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in completion %}
+            {% set done = [row.has_karta, row.has_potwierdzenie, row.has_ankieta, row.has_dziennik, row.has_sprawozdanie] | selectattr('__bool__') | list | length %}
+            <tr>
+                <td>{{ row.album }}</td>
+                <td>{{ row.student_name or '–' }}</td>
+                {% for has in [row.has_karta, row.has_potwierdzenie, row.has_ankieta, row.has_dziennik, row.has_sprawozdanie] %}
+                <td style="text-align:center;">
+                    {% if has %}<span style="color:#0f766e;font-weight:600;">T</span>
+                    {% else %}<span style="color:#9ca3af;">–</span>{% endif %}
+                </td>
+                {% endfor %}
+                <td>
+                    <div style="display:flex;align-items:center;gap:6px;">
+                        <div style="flex:1;height:6px;background:#e5e7eb;border-radius:3px;">
+                            <div style="width:{{ (done / 5 * 100)|int }}%;height:6px;background:{% if done == 5 %}#0f766e{% elif done >= 3 %}#374151{% else %}#9ca3af{% endif %};border-radius:3px;"></div>
+                        </div>
+                        <span style="font-size:11px;color:#6b7280;white-space:nowrap;">{{ done }}/5</span>
+                    </div>
+                </td>
+                <td>
+                    {% if done == 5 %}
+                    <a class="btn btn-secondary" style="font-size:12px;padding:5px 10px;"
+                       href="{{ url_for('pdf_zip_student', album=row.album) }}">ZIP</a>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="info-box">Brak danych studentów w systemie.</div>
+{% endif %}
+
+<!-- Eksport zbiorczy -->
+<div style="margin-top:16px;padding:14px 16px;background:#fff;border:1px solid #d1d5db;border-radius:4px;">
+    <strong style="font-size:13px;">Eksport zbiorczy</strong>
+    <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;">
+        <a href="{{ url_for('pdf_zip_all') }}" class="btn btn-secondary" style="font-size:12px;padding:7px 14px;">
+            Pobierz wszystkie raporty (ZIP)
+        </a>
+    </div>
+</div>
+
+<!-- Panel administracji (tylko koordynator i admin) -->
+<div style="margin-top:10px;padding:14px 16px;background:#fff;border:1px solid #d1d5db;border-radius:4px;">
+    <strong style="font-size:13px;">Administracja użytkownikami</strong>
+    <div style="margin-top:10px;">
+        <a href="{{ url_for('admin.users') }}" class="btn btn-secondary" style="font-size:12px;padding:7px 14px;">
+            Panel użytkowników
+        </a>
+    </div>
+</div>
+
+<div style="margin-top:12px;padding:12px 16px;background:#f7f7f7;border:1px solid #d1d5db;border-radius:4px;font-size:12px;color:#6b7280;">
+    Zalogowano przez: <strong>{{ user.auth_provider }}</strong> &bull;
+    Ostatnie logowanie: <strong>{{ user.last_login.strftime('%d.%m.%Y %H:%M') if user.last_login else '–' }}</strong>
+</div>
+
+{% if completion %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script>
+(function () {
+    const rows = {{ completion | tojson }};
+    const total = rows.length;
+
+    // Dane do wykresu słupkowego
+    const counts = {
+        karta:         rows.filter(r => r.has_karta).length,
+        potwierdzenie: rows.filter(r => r.has_potwierdzenie).length,
+        ankieta:       rows.filter(r => r.has_ankieta).length,
+        dziennik:      rows.filter(r => r.has_dziennik).length,
+        sprawozdanie:  rows.filter(r => r.has_sprawozdanie).length,
+    };
+
+    // Dane do wykresu kołowego
+    const kompletni   = rows.filter(r =>
+        r.has_karta && r.has_potwierdzenie && r.has_ankieta &&
+        r.has_dziennik && r.has_sprawozdanie
+    ).length;
+    const niekompletni = total - kompletni;
+
+    const GRAY   = "#374151";
+    const LGRAY  = "#9ca3af";
+    const DGRAY  = "#1f2937";
+    const BORDER = "#f7f7f7";
+
+    // Wykres słupkowy
+    new Chart(document.getElementById("chart-bar"), {
+        type: "bar",
+        data: {
+            labels: ["Zał. 3", "Zał. 4", "Zał. 5", "Zał. 6", "Zał. 7"],
+            datasets: [{
+                label: "Liczba złożonych dokumentów",
+                data: [
+                    counts.karta, counts.potwierdzenie,
+                    counts.ankieta, counts.dziennik, counts.sprawozdanie
+                ],
+                backgroundColor: [DGRAY, GRAY, GRAY, LGRAY, LGRAY],
+                borderColor: BORDER,
+                borderWidth: 2,
+                borderRadius: 3,
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: ctx => ctx.parsed.y + " / " + total + " studentów"
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: total || 1,
+                    ticks: { stepSize: 1, color: "#6b7280", font: { size: 11 } },
+                    grid: { color: "#e5e7eb" }
+                },
+                x: {
+                    ticks: { color: "#374151", font: { size: 12, weight: "600" } },
+                    grid: { display: false }
+                }
+            }
+        }
+    });
+
+    // Wykres kołowy
+    new Chart(document.getElementById("chart-doughnut"), {
+        type: "doughnut",
+        data: {
+            labels: ["Komplet dokumentów", "Niekompletna"],
+            datasets: [{
+                data: [kompletni, niekompletni],
+                backgroundColor: [DGRAY, "#e5e7eb"],
+                borderColor: BORDER,
+                borderWidth: 3,
+            }]
+        },
+        options: {
+            responsive: true,
+            cutout: "65%",
+            plugins: {
+                legend: {
+                    position: "bottom",
+                    labels: { color: "#374151", font: { size: 12 }, padding: 16 }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: ctx => ctx.label + ": " + ctx.parsed + " studentów"
+                    }
+                }
+            }
+        },
+        plugins: [{
+            id: "centerText",
+            afterDraw(chart) {
+                const { ctx, chartArea: { top, bottom, left, right } } = chart;
+                const cx = (left + right) / 2;
+                const cy = (top + bottom) / 2;
+                ctx.save();
+                ctx.textAlign = "center";
+                ctx.textBaseline = "middle";
+                ctx.fillStyle = "#1f2937";
+                ctx.font = "bold 22px sans-serif";
+                ctx.fillText(total > 0 ? Math.round(kompletni / total * 100) + "%" : "–", cx, cy - 8);
+                ctx.font = "11px sans-serif";
+                ctx.fillStyle = "#9ca3af";
+                ctx.fillText("komplet", cx, cy + 12);
+                ctx.restore();
+            }
+        }]
+    });
+})();
+</script>
+{% endif %}
+
+{% endblock %}

@@ -2,44 +2,69 @@
 
 {% block title %}Potwierdzenie efektów uczenia się{% endblock %}
 {% block page_title %}Potwierdzenie efektów uczenia się{% endblock %}
-{% block page_subtitle %}Formularz załącznika nr 4 dla studenta odbywającego praktykę{% endblock %}
+{% block page_subtitle %}
+  {% if viewer_role == 'opiekun_zakladowy' %}Wypełnij dane studenta i efekty – Załącznik nr 4
+  {% elif viewer_role == 'opiekun_uczelniany' %}Wypełnij opinię uczelni – Załącznik nr 4
+  {% else %}Formularz załącznika nr 4{% endif %}
+{% endblock %}
 
 {% block content %}
 <div class="actions">
-    <a class="btn btn-secondary" href="{{ url_for('lista_potwierdzen') }}">Lista studentów</a>
+    <a class="btn btn-secondary" href="{{ url_for('lista_potwierdzen') }}">Lista potwierdzeń</a>
 </div>
 
-<form method="post" action="{{ url_for('potwierdzenie') }}">
-    <h3 class="section-title">Dane studenta</h3>
+{% if viewer_role == 'opiekun_uczelniany' and data and data.student_name %}
+<div style="padding:12px 16px;background:#f7f7f7;border:1px solid #d1d5db;border-radius:4px;font-size:13px;color:#374151;margin-bottom:16px;">
+    Student: <strong>{{ data.student_name }}</strong> &bull; Nr albumu: <strong>{{ data.album }}</strong>
+    {% if data.specialty %} &bull; Specjalność: <strong>{{ data.specialty }}</strong>{% endif %}
+    {% if data.hours %} &bull; Godziny: <strong>{{ data.hours }}</strong>{% endif %}
+</div>
+{% endif %}
 
+<div id="form-errors" class="form-error-banner" style="display:none;"></div>
+<form id="potwierdzenie-form" method="post" action="{{ url_for('potwierdzenie') }}" novalidate>
+
+    <!-- album hidden dla opiekuna uczelnianego -->
+    {% if viewer_role == 'opiekun_uczelniany' %}
+    <input type="hidden" name="album" value="{{ data.album if data else locked_album }}">
+    {% endif %}
+
+    {# ── SEKCJA DANYCH STUDENTA – wypełnia opiekun zakładowy ── #}
+    {% if viewer_role != 'opiekun_uczelniany' %}
+    <h3 class="section-title">Dane studenta</h3>
     <div class="form-grid">
         <label>
-            Student/ka
-            <input type="text" name="student_name" value="{{ data.student_name if data else '' }}">
+            Student/ka <span class="req">*</span>
+            <input type="text" name="student_name" id="student_name"
+                   value="{{ data.student_name if data else '' }}" required>
+            <span class="field-error" id="err-student_name"></span>
         </label>
-
         <label>
-            Nr albumu
-            <input type="text" name="album" value="{{ data.album if data else '' }}">
+            Nr albumu <span class="req">*</span>
+            <input type="text" name="album" id="album"
+                   value="{{ locked_album or (data.album if data else '') }}" required
+                   pattern="^\d{3,6}$" title="Nr albumu: 3–6 cyfr"
+                   {% if locked_album %}readonly style="background:#f7f7f7;color:#6b7280;"{% endif %}>
+            <span class="field-error" id="err-album"></span>
         </label>
-
         <label>
-            Specjalność
-            <input type="text" name="specialty" value="{{ data.specialty if data else '' }}">
+            Specjalność <span class="req">*</span>
+            <input type="text" name="specialty" id="specialty"
+                   value="{{ data.specialty if data else '' }}" required>
+            <span class="field-error" id="err-specialty"></span>
         </label>
-
         <label>
-            Liczba godzin praktyki
-            <input type="number" name="hours" value="{{ data.hours if data else '' }}">
+            Liczba godzin praktyki <span class="req">*</span>
+            <input type="number" name="hours" id="hours" min="1" max="9999"
+                   value="{{ data.hours if data else '' }}" required>
+            <span class="field-error" id="err-hours"></span>
         </label>
     </div>
 
     <h3 class="section-title">Efekty uczenia się</h3>
-
     <div class="info-box">
         Zaznacz efekty, które zostały osiągnięte w ramach praktyki zawodowej.
     </div>
-
     <div class="table-wrap">
         <table>
             <thead>
@@ -68,12 +93,9 @@
                 <tr>
                     <td>{{ nr }}</td>
                     <td>{{ opis }}</td>
-                    <td style="text-align: center;">
-                        <input
-                            type="checkbox"
-                            name="effect_{{ nr }}"
-                            {% if data and data.effects and data.effects.get(nr) %}checked{% endif %}
-                        >
+                    <td style="text-align:center;">
+                        <input type="checkbox" name="effect_{{ nr }}"
+                            {% if data and data.effects and data.effects.get(nr) %}checked{% endif %}>
                     </td>
                 </tr>
                 {% endfor %}
@@ -86,15 +108,75 @@
         Uwagi / potwierdzenie
         <textarea name="company_supervisor_note" rows="4">{{ data.company_supervisor_note if data else '' }}</textarea>
     </label>
+    {% endif %}
 
+    {# ── SEKCJA OPIEKUNA UCZELNIANEGO ── #}
+    {% if viewer_role == 'opiekun_uczelniany' or viewer_role not in ('opiekun_zakladowy', 'opiekun_uczelniany') %}
     <h3 class="section-title">Opinia opiekuna uczelnianego</h3>
+    {% if viewer_role == 'opiekun_uczelniany' %}
+    <div class="info-box" style="margin-bottom:10px;">
+        Dane studenta i efekty uczenia się zostały wypełnione przez opiekuna zakładowego.
+        Uzupełnij poniżej swoją opinię.
+    </div>
+    {% endif %}
     <label>
         Opinia
         <textarea name="university_supervisor_opinion" rows="4">{{ data.university_supervisor_opinion if data else '' }}</textarea>
     </label>
+    {% endif %}
 
     <div class="actions">
         <button type="submit">Zapisz</button>
     </div>
 </form>
+
+<style>
+  .req { color: var(--danger); }
+  .field-error { display: block; color: var(--danger); font-size: 12px; margin-top: 2px; min-height: 16px; }
+  .input-invalid { border-color: var(--danger) !important; }
+  .form-error-banner { background: #fee2e2; color: var(--danger); border-radius: 8px;
+    padding: 12px 16px; margin-bottom: 16px; font-size: 14px; }
+</style>
+
+<script>
+(function () {
+  const role = "{{ viewer_role }}";
+  const FIELDS_SUPERVISOR = [
+    { id: "student_name", label: "Imię i nazwisko studenta", check: v => v.trim().length >= 3 },
+    { id: "album",        label: "Nr albumu",                check: v => /^\d{3,6}$/.test(v.trim()) },
+    { id: "specialty",    label: "Specjalność",              check: v => v.trim().length >= 2 },
+    { id: "hours",        label: "Liczba godzin praktyki",   check: v => Number(v) >= 1 && Number(v) <= 9999 },
+  ];
+
+  const FIELDS = (role === "opiekun_uczelniany") ? [] : FIELDS_SUPERVISOR;
+
+  function validateField(field) {
+    const el  = document.getElementById(field.id);
+    if (!el) return true;
+    const err = document.getElementById("err-" + field.id);
+    const ok  = field.check(el.value);
+    el.classList.toggle("input-invalid", !ok);
+    if (err) err.textContent = ok ? "" : `Pole „${field.label}" jest nieprawidłowe.`;
+    return ok;
+  }
+
+  document.addEventListener("DOMContentLoaded", function () {
+    FIELDS.forEach(f => {
+      const el = document.getElementById(f.id);
+      if (el) el.addEventListener("blur", () => validateField(f));
+    });
+    document.getElementById("potwierdzenie-form").addEventListener("submit", function (e) {
+      const errors = FIELDS.filter(f => !validateField(f));
+      if (errors.length > 0) {
+        e.preventDefault();
+        const banner = document.getElementById("form-errors");
+        banner.style.display = "block";
+        banner.innerHTML = "<strong>Proszę poprawić następujące pola:</strong><ul style='margin:6px 0 0 16px'>"
+          + errors.map(f => `<li>${f.label}</li>`).join("") + "</ul>";
+        banner.scrollIntoView({ behavior: "smooth" });
+      }
+    });
+  });
+})();
+</script>
 {% endblock %}

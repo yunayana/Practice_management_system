@@ -20,6 +20,7 @@
                 <th>Data do</th>
                 <th>Liczba wpisów</th>
                 <th>Akcja</th>
+                <th>Pobierz PDF</th>
             </tr>
         </thead>
         <tbody>
@@ -35,6 +36,14 @@
                     <a class="btn btn-secondary" href="{{ url_for('edytuj_dziennik', album=j.album) }}">
                         Edytuj
                     </a>
+                </td>
+                <td style="white-space:nowrap">
+                    <a class="btn" style="font-size:12px;padding:5px 10px"
+                       href="{{ url_for('pdf_dziennik', album=j.album) }}">Dziennik PDF</a>
+                    <a class="btn btn-secondary" style="font-size:12px;padding:5px 10px;margin-top:4px;display:inline-block"
+                       href="{{ url_for('pdf_raport', album=j.album) }}">Raport końcowy PDF</a>
+                    <a class="btn btn-secondary" style="font-size:12px;padding:5px 10px;margin-top:4px;display:inline-block"
+                       href="{{ url_for('pdf_zip_student', album=j.album) }}">Pobierz ZIP</a>
                 </td>
             </tr>
             {% endfor %}

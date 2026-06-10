@@ -1,0 +1,206 @@
+{% extends "base.html" %}
+
+{% block title %}Sprawozdanie z praktyki{% endblock %}
+{% block page_title %}Sprawozdanie z praktyki zawodowej{% endblock %}
+{% block page_subtitle %}Formularz załącznika nr 7 – końcowe sprawozdanie studenta{% endblock %}
+
+{% block content %}
+<div class="actions">
+    <a class="btn btn-secondary" href="{{ url_for('lista_sprawozdan') }}">Lista sprawozdań</a>
+</div>
+
+<div id="spr-errors" class="form-error-banner" style="display:none;"></div>
+<form id="spr-form" method="post" action="{{ url_for('sprawozdanie') }}" novalidate>
+
+    <h3 class="section-title">Dane studenta</h3>
+    <div class="form-grid">
+        <label>
+            Imię i nazwisko <span class="req">*</span>
+            <input type="text" name="student_name" id="s_student_name"
+                   value="{{ data.student_name if data else '' }}" required>
+            <span class="field-error" id="s-err-student_name"></span>
+        </label>
+        <label>
+            Nr albumu <span class="req">*</span>
+            <input type="text" name="album" id="s_album"
+                   value="{{ locked_album or (data.album if data else '') }}" required pattern="^\d{3,6}$"
+                   {% if locked_album %}readonly style="background:#f7f7f7;color:#6b7280;"{% endif %}>
+            <span class="field-error" id="s-err-album"></span>
+        </label>
+        <label>
+            Kierunek / specjalność
+            <input type="text" name="specialization"
+                   value="{{ data.specialization if data else '' }}">
+        </label>
+        <label>
+            Rok akademicki
+            <input type="text" name="academic_year"
+                   value="{{ data.academic_year if data else '' }}" placeholder="2024/2025">
+        </label>
+    </div>
+
+    <h3 class="section-title">Dane zakładu pracy</h3>
+    <div class="form-grid">
+        <label>
+            Nazwa firmy <span class="req">*</span>
+            <input type="text" name="company_name" id="s_company_name"
+                   value="{{ data.company_name if data else '' }}" required>
+            <span class="field-error" id="s-err-company_name"></span>
+        </label>
+        <label>
+            Adres
+            <input type="text" name="company_address"
+                   value="{{ data.company_address if data else '' }}">
+        </label>
+        <label>
+            Data rozpoczęcia <span class="req">*</span>
+            <input type="date" name="start_date" id="s_start_date"
+                   value="{{ data.start_date if data else '' }}" required>
+            <span class="field-error" id="s-err-start_date"></span>
+        </label>
+        <label>
+            Data zakończenia <span class="req">*</span>
+            <input type="date" name="end_date" id="s_end_date"
+                   value="{{ data.end_date if data else '' }}" required>
+            <span class="field-error" id="s-err-end_date"></span>
+        </label>
+    </div>
+
+    <h3 class="section-title">Charakterystyka zakładu pracy</h3>
+    <label>
+        Opis firmy (branża, wielkość, główny zakres działalności)
+        <textarea name="company_description" rows="4">{{ data.company_description if data else '' }}</textarea>
+    </label>
+    <label>
+        Dział / zespół, w którym odbywała się praktyka
+        <input type="text" name="department"
+               value="{{ data.department if data else '' }}"
+               placeholder="np. Dział Oprogramowania, Zespół DevOps">
+    </label>
+
+    <h3 class="section-title">Wykonywane zadania</h3>
+    <label>
+        Szczegółowy opis wykonywanych prac i zadań <span class="req">*</span>
+        <textarea name="tasks_description" id="s_tasks_description" rows="6"
+                  required>{{ data.tasks_description if data else '' }}</textarea>
+        <span class="field-error" id="s-err-tasks_description"></span>
+    </label>
+    <label>
+        Zastosowane technologie, narzędzia, języki programowania
+        <textarea name="technologies" rows="3">{{ data.technologies if data else '' }}</textarea>
+    </label>
+    <label>
+        Projekty lub zadania, w których uczestniczył/a student/ka
+        <textarea name="projects" rows="4">{{ data.projects if data else '' }}</textarea>
+    </label>
+
+    <h3 class="section-title">Napotkane trudności i wnioski</h3>
+    <label>
+        Problemy napotkane w trakcie praktyki i sposób ich rozwiązania
+        <textarea name="problems" rows="4">{{ data.problems if data else '' }}</textarea>
+    </label>
+    <label>
+        Wnioski końcowe – co wyniosłem/am z praktyki, jak oceniam jej przydatność
+        <textarea name="conclusions" rows="4">{{ data.conclusions if data else '' }}</textarea>
+    </label>
+
+    <h3 class="section-title">Samoocena efektów uczenia się</h3>
+    <div class="info-box">
+        Zaznacz efekty, które Twoim zdaniem zostały osiągnięte podczas praktyki.
+    </div>
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>Nr</th>
+                    <th>Efekt</th>
+                    <th>Osiągnięty</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for nr, opis in [
+                    ('01', 'Ma wiedzę na temat realizacji zadań inżynierskich dotyczących informatyki'),
+                    ('02', 'Zna technologie, narzędzia, metody i sprzęt stosowane w informatyce'),
+                    ('03', 'Zna ekonomiczne i prawne skutki własnych działań'),
+                    ('04', 'Zna zasady bezpieczeństwa pracy i ergonomii w zawodzie informatyka'),
+                    ('05', 'Pozyskuje informacje o technologiach z różnych źródeł'),
+                    ('06', 'Rozwija kompetencje w zakresie sprzętu i oprogramowania'),
+                    ('07', 'Opracowuje dokumentację i referuje zagadnienia'),
+                    ('08', 'Identyfikuje problem informatyczny i realizuje rozwiązanie'),
+                    ('09', 'Rozwiązuje rzeczywiste zadanie inżynierskie z uwzględnieniem norm i etyki'),
+                    ('10', 'Pracuje w zespole branży IT'),
+                    ('11', 'Przestrzega zasad etyki zawodowej'),
+                    ('12', 'Komunikuje zagadnienia informatyczne osobom spoza branży'),
+                    ('13', 'Dostrzega tempo deaktualizacji wiedzy informatycznej'),
+                ] %}
+                <tr>
+                    <td>{{ nr }}</td>
+                    <td>{{ opis }}</td>
+                    <td style="text-align:center;">
+                        <input type="checkbox" name="self_effect_{{ nr }}"
+                            {% if data and data.get('self_effects', {}).get(nr) %}checked{% endif %}>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="actions" style="margin-top:20px;">
+        <button type="submit">Zapisz sprawozdanie</button>
+    </div>
+</form>
+
+<style>
+  .req { color: var(--danger); }
+  .field-error { display: block; color: var(--danger); font-size: 12px; margin-top: 2px; min-height: 16px; }
+  .input-invalid { border-color: var(--danger) !important; }
+  .form-error-banner { background: #fee2e2; color: var(--danger); border-radius: 8px;
+    padding: 12px 16px; margin-bottom: 16px; font-size: 14px; }
+</style>
+
+<script>
+(function () {
+  const FIELDS = [
+    { id: "s_student_name",      label: "Imię i nazwisko",    check: v => v.trim().length >= 3 },
+    { id: "s_album",             label: "Nr albumu",          check: v => /^\d{3,6}$/.test(v.trim()) },
+    { id: "s_company_name",      label: "Nazwa firmy",        check: v => v.trim().length >= 2 },
+    { id: "s_start_date",        label: "Data rozpoczęcia",   check: v => Boolean(v) },
+    { id: "s_end_date",          label: "Data zakończenia",   check: (v, form) => {
+        const s = form.querySelector("#s_start_date").value;
+        return Boolean(v) && (!s || v >= s);
+    }},
+    { id: "s_tasks_description", label: "Opis zadań",         check: v => v.trim().length >= 10 },
+  ];
+
+  function validateField(f, form) {
+    const el  = document.getElementById(f.id);
+    const key = f.id.replace(/^s_/, "");
+    const err = document.getElementById("s-err-" + key);
+    const ok  = f.check(el.value, form);
+    el.classList.toggle("input-invalid", !ok);
+    if (err) err.textContent = ok ? "" : `Pole „${f.label}" jest wymagane lub nieprawidłowe.`;
+    return ok;
+  }
+
+  document.addEventListener("DOMContentLoaded", function () {
+    const form = document.getElementById("spr-form");
+    FIELDS.forEach(f => {
+      const el = document.getElementById(f.id);
+      if (el) el.addEventListener("blur", () => validateField(f, form));
+    });
+    form.addEventListener("submit", function (e) {
+      const errors = FIELDS.filter(f => !validateField(f, form));
+      if (errors.length > 0) {
+        e.preventDefault();
+        const banner = document.getElementById("spr-errors");
+        banner.style.display = "block";
+        banner.innerHTML = "<strong>Proszę poprawić następujące pola:</strong><ul style='margin:6px 0 0 16px'>"
+          + errors.map(f => `<li>${f.label}</li>`).join("") + "</ul>";
+        banner.scrollIntoView({ behavior: "smooth" });
+      }
+    });
+  });
+})();
+</script>
+{% endblock %}

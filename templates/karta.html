@@ -1,0 +1,244 @@
+{% extends "base.html" %}
+
+{% block title %}Karta praktyki zawodowej{% endblock %}
+{% block page_title %}Karta praktyki zawodowej{% endblock %}
+{% block page_subtitle %}
+  {% if viewer_role == 'student' %}Wypełnij dane studenta – Załącznik nr 3
+  {% elif viewer_role == 'opiekun_zakladowy' %}Wypełnij dane zakładu pracy – Załącznik nr 3
+  {% else %}Formularz załącznika nr 3 – dane studenta i zakładu pracy{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="actions">
+    <a class="btn btn-secondary" href="{{ url_for('lista_kart') }}">Lista kart</a>
+</div>
+
+{% if viewer_role == 'opiekun_zakladowy' and data and data.student_name %}
+<div style="padding:12px 16px;background:#f7f7f7;border:1px solid #d1d5db;border-radius:4px;font-size:13px;color:#374151;margin-bottom:16px;">
+    Student: <strong>{{ data.student_name }}</strong> &bull; Nr albumu: <strong>{{ data.album }}</strong>
+    {% if data.study_program %} &bull; Kierunek: <strong>{{ data.study_program }}</strong>{% endif %}
+</div>
+{% endif %}
+
+<div id="karta-errors" class="form-error-banner" style="display:none;"></div>
+<form id="karta-form" method="post" action="{{ url_for('karta') }}" novalidate>
+
+    <!-- Pole albumu zawsze w formularzu (hidden dla opiekuna zakładowego) -->
+    {% if viewer_role == 'opiekun_zakladowy' %}
+    <input type="hidden" name="album" value="{{ data.album if data else locked_album }}">
+    {% endif %}
+
+    {# ── SEKCJA STUDENTA ── #}
+    {% if viewer_role != 'opiekun_zakladowy' %}
+    <h3 class="section-title">Dane studenta</h3>
+    <div class="form-grid">
+        <label>
+            Imię i nazwisko <span class="req">*</span>
+            <input type="text" name="student_name" id="k_student_name"
+                   value="{{ data.student_name if data else '' }}" required>
+            <span class="field-error" id="k-err-student_name"></span>
+        </label>
+        <label>
+            Nr albumu <span class="req">*</span>
+            <input type="text" name="album" id="k_album"
+                   value="{{ locked_album or (data.album if data else '') }}" required
+                   pattern="^\d{3,6}$" title="Nr albumu: 3–6 cyfr"
+                   {% if locked_album %}readonly style="background:#f7f7f7;color:#6b7280;"{% endif %}>
+            <span class="field-error" id="k-err-album"></span>
+        </label>
+        <label>
+            Kierunek studiów
+            <input type="text" name="study_program"
+                   value="{{ data.study_program if data else '' }}"
+                   placeholder="np. Informatyka">
+        </label>
+        <label>
+            Specjalność / ścieżka
+            <input type="text" name="specialization"
+                   value="{{ data.specialization if data else '' }}"
+                   placeholder="np. Systemy Informacyjne">
+        </label>
+        <label>
+            Rok akademicki <span class="req">*</span>
+            <input type="text" name="academic_year" id="k_academic_year"
+                   value="{{ data.academic_year if data else '' }}" required
+                   pattern="^\d{4}\/\d{4}$" title="Format: 2024/2025">
+            <span class="field-error" id="k-err-academic_year"></span>
+        </label>
+        <label>
+            Semestr
+            <select name="semester">
+                {% for s in ['I','II','III','IV','V','VI','VII'] %}
+                <option value="{{ s }}" {% if data and data.semester == s %}selected{% endif %}>{{ s }}</option>
+                {% endfor %}
+            </select>
+        </label>
+        <label>
+            Opiekun uczelniany
+            <input type="text" name="university_supervisor"
+                   value="{{ data.university_supervisor if data else '' }}">
+        </label>
+    </div>
+
+    <h3 class="section-title">Przebieg praktyki</h3>
+    <div class="form-grid">
+        <label>
+            Data rozpoczęcia <span class="req">*</span>
+            <input type="date" name="start_date" id="k_start_date"
+                   value="{{ data.start_date if data else '' }}" required>
+            <span class="field-error" id="k-err-start_date"></span>
+        </label>
+        <label>
+            Data zakończenia <span class="req">*</span>
+            <input type="date" name="end_date" id="k_end_date"
+                   value="{{ data.end_date if data else '' }}" required>
+            <span class="field-error" id="k-err-end_date"></span>
+        </label>
+        <label>
+            Łączna liczba godzin
+            <input type="number" name="total_hours" min="1" max="9999"
+                   value="{{ data.total_hours if data else '' }}">
+        </label>
+    </div>
+    {% endif %}
+
+    {# ── SEKCJA ZAKŁADU PRACY (opiekun zakładowy lub personel) ── #}
+    {% if viewer_role != 'student' %}
+    <h3 class="section-title">Dane zakładu pracy</h3>
+    <div class="form-grid">
+        <label>
+            Nazwa firmy / instytucji <span class="req">*</span>
+            <input type="text" name="company_name" id="k_company_name"
+                   value="{{ data.company_name if data else '' }}" required>
+            <span class="field-error" id="k-err-company_name"></span>
+        </label>
+        <label>
+            Adres
+            <input type="text" name="company_address"
+                   value="{{ data.company_address if data else '' }}">
+        </label>
+        <label>
+            Telefon
+            <input type="text" name="company_phone"
+                   value="{{ data.company_phone if data else '' }}">
+        </label>
+        <label>
+            NIP
+            <input type="text" name="company_nip"
+                   value="{{ data.company_nip if data else '' }}">
+        </label>
+        <label>
+            Profil / rodzaj działalności
+            <input type="text" name="company_type"
+                   value="{{ data.company_type if data else '' }}"
+                   placeholder="np. usługi IT, produkcja oprogramowania">
+        </label>
+    </div>
+
+    <h3 class="section-title">Opiekun zakładowy</h3>
+    <div class="form-grid">
+        <label>
+            Imię i nazwisko opiekuna <span class="req">*</span>
+            <input type="text" name="company_supervisor_name" id="k_company_supervisor_name"
+                   value="{{ data.company_supervisor_name if data else '' }}" required>
+            <span class="field-error" id="k-err-company_supervisor_name"></span>
+        </label>
+        <label>
+            Stanowisko / tytuł
+            <input type="text" name="company_supervisor_title"
+                   value="{{ data.company_supervisor_title if data else '' }}">
+        </label>
+    </div>
+
+    <h3 class="section-title">Ocena i opinia opiekuna zakładowego</h3>
+    <div class="form-grid">
+        <label>
+            Ocena końcowa
+            <select name="grade">
+                <option value="">– brak –</option>
+                {% for g in ['5 (bdb)','4.5 (db+)','4 (db)','3.5 (dst+)','3 (dst)','2 (ndst)'] %}
+                <option value="{{ g }}" {% if data and data.grade == g %}selected{% endif %}>{{ g }}</option>
+                {% endfor %}
+            </select>
+        </label>
+    </div>
+    <label>
+        Opinia opiekuna zakładowego
+        <textarea name="company_supervisor_opinion" rows="4">{{ data.company_supervisor_opinion if data else '' }}</textarea>
+    </label>
+    {% endif %}
+
+    <div class="actions">
+        <button type="submit">Zapisz</button>
+        <span id="karta-success" style="display:none;color:#0f766e;font-weight:600;margin-left:12px;">Zapisano</span>
+    </div>
+</form>
+
+{% if data and data.album and viewer_role != 'student' %}
+<div style="margin-top:16px;padding:12px 16px;background:#f7f7f7;border:1px solid #d1d5db;border-radius:4px;font-size:12px;">
+    <a href="{{ url_for('pdf_karta', album=data.album) }}" class="btn btn-secondary" style="font-size:12px;padding:6px 12px;">Pobierz PDF</a>
+</div>
+{% endif %}
+
+<style>
+  .req { color: var(--danger); }
+  .field-error { display: block; color: var(--danger); font-size: 12px; margin-top: 2px; min-height: 16px; }
+  .input-invalid { border-color: var(--danger) !important; }
+  .form-error-banner { background: #fee2e2; color: var(--danger); border-radius: 8px;
+    padding: 12px 16px; margin-bottom: 16px; font-size: 14px; }
+</style>
+
+<script>
+(function () {
+  const role = "{{ viewer_role }}";
+  const FIELDS_STUDENT = [
+    { id: "k_student_name",  label: "Imię i nazwisko",  check: v => v.trim().length >= 3 },
+    { id: "k_album",         label: "Nr albumu",         check: v => /^\d{3,6}$/.test(v.trim()) },
+    { id: "k_academic_year", label: "Rok akademicki",    check: v => /^\d{4}\/\d{4}$/.test(v.trim()) },
+    { id: "k_start_date",    label: "Data rozpoczęcia",  check: v => Boolean(v) },
+    { id: "k_end_date",      label: "Data zakończenia",  check: (v, form) => {
+        const s = form ? form.querySelector("#k_start_date")?.value : "";
+        return Boolean(v) && (!s || v >= s);
+    }},
+  ];
+  const FIELDS_COMPANY = [
+    { id: "k_company_name",            label: "Nazwa firmy",              check: v => v.trim().length >= 2 },
+    { id: "k_company_supervisor_name", label: "Imię i nazwisko opiekuna", check: v => v.trim().length >= 3 },
+  ];
+
+  const FIELDS = role === "student" ? FIELDS_STUDENT
+               : role === "opiekun_zakladowy" ? FIELDS_COMPANY
+               : [...FIELDS_STUDENT, ...FIELDS_COMPANY];
+
+  function validateField(f, form) {
+    const el  = document.getElementById(f.id);
+    if (!el) return true;
+    const key = f.id.replace(/^k_/, "");
+    const err = document.getElementById("k-err-" + key);
+    const ok  = f.check(el.value, form);
+    el.classList.toggle("input-invalid", !ok);
+    if (err) err.textContent = ok ? "" : `Pole „${f.label}" jest wymagane lub nieprawidłowe.`;
+    return ok;
+  }
+
+  document.addEventListener("DOMContentLoaded", function () {
+    const form = document.getElementById("karta-form");
+    FIELDS.forEach(f => {
+      const el = document.getElementById(f.id);
+      if (el) el.addEventListener("blur", () => validateField(f, form));
+    });
+    form.addEventListener("submit", function (e) {
+      const errors = FIELDS.filter(f => !validateField(f, form));
+      if (errors.length > 0) {
+        e.preventDefault();
+        const banner = document.getElementById("karta-errors");
+        banner.style.display = "block";
+        banner.innerHTML = "<strong>Proszę poprawić następujące pola:</strong><ul style='margin:6px 0 0 16px'>"
+          + errors.map(f => `<li>${f.label}</li>`).join("") + "</ul>";
+        banner.scrollIntoView({ behavior: "smooth" });
+      }
+    });
+  });
+})();
+</script>
+{% endblock %}

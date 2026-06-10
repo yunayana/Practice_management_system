@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+
+{% block title %}Lista kart praktyki{% endblock %}
+{% block page_title %}Karty praktyki zawodowej{% endblock %}
+{% block page_subtitle %}Załącznik nr 3 – lista wszystkich studentów{% endblock %}
+
+{% block content %}
+{% if current_user.role not in ('student', 'opiekun_zakladowy', 'opiekun_uczelniany') %}
+<div class="actions">
+    <a class="btn" href="{{ url_for('karta') }}">+ Nowa karta</a>
+</div>
+{% endif %}
+
+{% if cards %}
+<div class="table-wrap">
+    <table>
+        <thead>
+            <tr>
+                <th>Nr albumu</th>
+                <th>Student</th>
+                <th>Firma</th>
+                <th>Okres praktyki</th>
+                <th>Ocena</th>
+                <th>Akcje</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for c in cards %}
+            <tr>
+                <td>{{ c.album }}</td>
+                <td>{{ c.student_name }}</td>
+                <td>{{ c.company_name }}</td>
+                <td>{{ c.start_date }} – {{ c.end_date }}</td>
+                <td>{{ c.grade or '–' }}</td>
+                <td>
+                    <a class="btn btn-secondary" href="{{ url_for('edytuj_karte', album=c.album) }}">
+                        {% if current_user.role == 'opiekun_zakladowy' %}Wypełnij dane zakładu{% else %}Edytuj{% endif %}
+                    </a>
+                    <a class="btn" href="{{ url_for('pdf_karta', album=c.album) }}" target="_blank">PDF</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="info-box">Brak zapisanych kart. <a href="{{ url_for('karta') }}">Dodaj pierwszą kartę.</a></div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,246 @@
+{% extends "base.html" %}
+
+{% block title %}Kalendarz praktyki{% endblock %}
+{% block page_title %}Kalendarz praktyki{% endblock %}
+{% block page_subtitle %}Dni pracy wpisane w dzienniku – Załącznik nr 6{% endblock %}
+
+{% block content %}
+
+<div class="actions">
+    <a class="btn btn-secondary" href="{{ url_for('edytuj_dziennik', album=album) }}">Edytuj dziennik</a>
+</div>
+
+{% if not entries %}
+<div class="info-box">Brak wpisów w dzienniku. <a href="{{ url_for('edytuj_dziennik', album=album) }}">Dodaj pierwsze wpisy.</a></div>
+{% else %}
+
+<div style="display:grid;grid-template-columns:1fr 320px;gap:16px;align-items:start;" id="cal-layout">
+
+    <!-- Kalendarz -->
+    <div>
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
+            <button class="btn btn-secondary" style="padding:5px 14px;font-size:13px;" id="prev-btn">&larr;</button>
+            <span id="month-label" style="font-weight:600;font-size:15px;min-width:160px;text-align:center;"></span>
+            <button class="btn btn-secondary" style="padding:5px 14px;font-size:13px;" id="next-btn">&rarr;</button>
+        </div>
+
+        <div id="calendar" style="border:1px solid #d1d5db;border-radius:4px;overflow:hidden;"></div>
+
+        <div style="margin-top:10px;display:flex;gap:16px;font-size:12px;color:#6b7280;">
+            <span><span style="display:inline-block;width:12px;height:12px;background:#1f2937;border-radius:2px;vertical-align:middle;margin-right:4px;"></span>Dzień z wpisem</span>
+            <span><span style="display:inline-block;width:12px;height:12px;background:#f7f7f7;border:1px solid #d1d5db;border-radius:2px;vertical-align:middle;margin-right:4px;"></span>Brak wpisu</span>
+        </div>
+    </div>
+
+    <!-- Panel szczegółów wpisu -->
+    <div id="entry-panel" style="border:1px solid #d1d5db;border-radius:4px;padding:16px;background:#f7f7f7;min-height:200px;">
+        <p style="color:#9ca3af;font-size:13px;margin:0;">Kliknij zaznaczony dzień, aby zobaczyć wpis.</p>
+    </div>
+
+</div>
+
+{% endif %}
+
+<!-- Tabela wszystkich wpisów -->
+{% if entries %}
+<h3 class="section-title" style="margin-top:24px;">Wszystkie wpisy dziennika</h3>
+<div class="table-wrap">
+    <table>
+        <thead>
+            <tr>
+                <th>Dzień</th>
+                <th>Data</th>
+                <th>Opis prac</th>
+                <th>Nr efektów</th>
+                <th>Podpis nadzorującego</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for e in entries %}
+            <tr>
+                <td style="text-align:center;">{{ e.day }}</td>
+                <td style="white-space:nowrap;">{{ e.date }}</td>
+                <td>{{ e.description }}</td>
+                <td style="text-align:center;">{{ e.effects_numbers }}</td>
+                <td>{{ e.supervisor }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+
+<script>
+(function () {
+    // Dane wpisów z backendu
+    const RAW_ENTRIES = {{ entries_json | safe }};
+
+    // Zbuduj mapę: "YYYY-MM-DD" -> lista wpisów
+    const entryMap = {};
+    RAW_ENTRIES.forEach(function (e) {
+        if (e.date) {
+            if (!entryMap[e.date]) entryMap[e.date] = [];
+            entryMap[e.date].push(e);
+        }
+    });
+
+    // Znajdź zakres miesięcy
+    const allDates = Object.keys(entryMap).sort();
+    let currentYear, currentMonth;
+    if (allDates.length > 0) {
+        const first = allDates[0].split("-");
+        currentYear  = parseInt(first[0]);
+        currentMonth = parseInt(first[1]) - 1; // 0-based
+    } else {
+        const now = new Date();
+        currentYear  = now.getFullYear();
+        currentMonth = now.getMonth();
+    }
+
+    const MONTHS_PL = [
+        "Styczeń","Luty","Marzec","Kwiecień","Maj","Czerwiec",
+        "Lipiec","Sierpień","Wrzesień","Październik","Listopad","Grudzień"
+    ];
+    const DAYS_PL = ["Pon","Wt","Śr","Czw","Pt","Sob","Nd"];
+
+    function pad(n) { return String(n).padStart(2, "0"); }
+
+    function renderCalendar(year, month) {
+        document.getElementById("month-label").textContent =
+            MONTHS_PL[month] + " " + year;
+
+        const cal = document.getElementById("calendar");
+        cal.innerHTML = "";
+
+        // Nagłówek dni tygodnia
+        const header = document.createElement("div");
+        header.style.cssText = "display:grid;grid-template-columns:repeat(7,1fr);background:#374151;";
+        DAYS_PL.forEach(function (d) {
+            const cell = document.createElement("div");
+            cell.textContent = d;
+            cell.style.cssText = "text-align:center;padding:8px 4px;font-size:11px;font-weight:600;color:#fff;letter-spacing:.05em;";
+            header.appendChild(cell);
+        });
+        cal.appendChild(header);
+
+        // Dni miesiąca
+        const firstDay = new Date(year, month, 1);
+        // Konwertuj niedziela=0 na poniedzialek=0
+        let startDow = firstDay.getDay(); // 0=Sun
+        startDow = (startDow === 0) ? 6 : startDow - 1;
+
+        const daysInMonth  = new Date(year, month + 1, 0).getDate();
+        const grid = document.createElement("div");
+        grid.style.cssText = "display:grid;grid-template-columns:repeat(7,1fr);";
+
+        // Puste komórki przed pierwszym dniem
+        for (let i = 0; i < startDow; i++) {
+            const empty = document.createElement("div");
+            empty.style.cssText = "padding:8px 4px;border-right:1px solid #e5e7eb;border-bottom:1px solid #e5e7eb;min-height:48px;background:#fafafa;";
+            grid.appendChild(empty);
+        }
+
+        for (let day = 1; day <= daysInMonth; day++) {
+            const dateStr = year + "-" + pad(month + 1) + "-" + pad(day);
+            const hasEntry = !!entryMap[dateStr];
+            const dow = (startDow + day - 1) % 7; // 0=Mon … 6=Sun
+
+            const cell = document.createElement("div");
+            cell.style.cssText = [
+                "padding:6px 8px;",
+                "border-right:1px solid #e5e7eb;",
+                "border-bottom:1px solid #e5e7eb;",
+                "min-height:48px;",
+                "position:relative;",
+                hasEntry ? "background:#1f2937;cursor:pointer;" : "background:#fff;",
+                (dow >= 5) ? "opacity:0.7;" : "",  // weekend – lekko szary
+            ].join("");
+
+            const num = document.createElement("span");
+            num.textContent = day;
+            num.style.cssText = [
+                "font-size:13px;font-weight:600;",
+                hasEntry ? "color:#fff;" : "color:#374151;",
+            ].join("");
+            cell.appendChild(num);
+
+            if (hasEntry) {
+                const dot = document.createElement("div");
+                dot.style.cssText = "font-size:10px;color:#9ca3af;margin-top:3px;";
+                dot.textContent = entryMap[dateStr].length === 1
+                    ? "1 wpis"
+                    : entryMap[dateStr].length + " wpisy";
+                cell.appendChild(dot);
+
+                cell.addEventListener("click", function () {
+                    showEntry(dateStr);
+                    // Usuń zaznaczenie z innych
+                    document.querySelectorAll(".cal-selected").forEach(function (el) {
+                        el.classList.remove("cal-selected");
+                        el.style.outline = "";
+                    });
+                    cell.classList.add("cal-selected");
+                    cell.style.outline = "2px solid #9ca3af";
+                });
+            }
+
+            grid.appendChild(cell);
+        }
+
+        cal.appendChild(grid);
+    }
+
+    function showEntry(dateStr) {
+        const panel = document.getElementById("entry-panel");
+        const entries = entryMap[dateStr] || [];
+        const d = new Date(dateStr + "T00:00:00");
+        const label = d.toLocaleDateString("pl-PL", {weekday:"long", year:"numeric", month:"long", day:"numeric"});
+
+        let html = "<strong style='font-size:14px;'>" + label + "</strong>";
+        entries.forEach(function (e) {
+            html += "<hr style='border:none;border-top:1px solid #d1d5db;margin:10px 0;'>";
+            if (e.description) {
+                html += "<p style='font-size:13px;margin:0 0 6px;'>" + escHtml(e.description) + "</p>";
+            }
+            if (e.effects_numbers) {
+                html += "<p style='font-size:12px;color:#6b7280;margin:0 0 4px;'>Efekty: " + escHtml(e.effects_numbers) + "</p>";
+            }
+            if (e.supervisor) {
+                html += "<p style='font-size:12px;color:#6b7280;margin:0;'>Nadzorujący: " + escHtml(e.supervisor) + "</p>";
+            }
+        });
+        panel.innerHTML = html;
+    }
+
+    function escHtml(s) {
+        return String(s)
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;");
+    }
+
+    renderCalendar(currentYear, currentMonth);
+
+    document.getElementById("prev-btn").addEventListener("click", function () {
+        currentMonth--;
+        if (currentMonth < 0) { currentMonth = 11; currentYear--; }
+        renderCalendar(currentYear, currentMonth);
+    });
+    document.getElementById("next-btn").addEventListener("click", function () {
+        currentMonth++;
+        if (currentMonth > 11) { currentMonth = 0; currentYear++; }
+        renderCalendar(currentYear, currentMonth);
+    });
+
+    // Responsive – przy wąskim ekranie panel pod kalendarzem
+    function adjustLayout() {
+        const layout = document.getElementById("cal-layout");
+        if (layout) {
+            layout.style.gridTemplateColumns = window.innerWidth < 700 ? "1fr" : "1fr 320px";
+        }
+    }
+    window.addEventListener("resize", adjustLayout);
+    adjustLayout();
+})();
+</script>
+{% endblock %}

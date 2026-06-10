@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Panel testów API – System praktyk</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+<style>
+  .api-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  @media (max-width: 900px) { .api-grid { grid-template-columns: 1fr; } }
+  .api-card { background: #fff; border-radius: 12px; padding: 20px;
+              border: 1px solid var(--border); }
+  .api-card h3 { margin: 0 0 12px; font-size: 15px; color: var(--primary); }
+  .method-badge { display: inline-block; padding: 2px 8px; border-radius: 4px;
+                  font-size: 11px; font-weight: 700; color: #fff; margin-right: 6px; }
+  .GET    { background: #16a34a; }
+  .POST   { background: #374151; }
+  .PUT    { background: #d97706; }
+  .DELETE { background: #4b5563; }
+  .PATCH  { background: #6b7280; }
+  .endpoint-url { font-family: monospace; font-size: 13px; color: var(--text); }
+  .param-row { display: flex; gap: 8px; margin-bottom: 8px; align-items: center; }
+  .param-row label { font-size: 12px; color: var(--muted); min-width: 110px; }
+  .param-row input, .param-row select, .param-row textarea {
+    flex: 1; padding: 6px 8px; border: 1px solid var(--border); border-radius: 6px;
+    font-size: 13px; font-family: inherit; }
+  .param-row textarea { height: 80px; resize: vertical; font-family: monospace; font-size: 12px; }
+  .btn-send { background: var(--primary); color: #fff; border: none; border-radius: 8px;
+              padding: 8px 18px; cursor: pointer; font-size: 13px; font-weight: 600; }
+  .btn-send:hover { background: var(--primary-dark); }
+  .response-box { margin-top: 12px; background: #0f172a; color: #e2e8f0;
+                  border-radius: 8px; padding: 12px; font-family: monospace;
+                  font-size: 12px; min-height: 60px; max-height: 260px;
+                  overflow-y: auto; white-space: pre-wrap; word-break: break-all; }
+  .status-ok  { color: #4ade80; }
+  .status-err { color: #f87171; }
+  .tab-bar { display: flex; gap: 4px; margin-bottom: 16px; flex-wrap: wrap; }
+  .tab-btn { padding: 6px 14px; border-radius: 20px; border: 1px solid var(--border);
+             background: #fff; cursor: pointer; font-size: 13px; }
+  .tab-btn.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+  .tab-section { display: none; }
+  .tab-section.active { display: block; }
+  .section-desc { font-size: 13px; color: var(--muted); margin-bottom: 16px; line-height: 1.5; }
+</style>
+</head>
+<body>
+<div class="app-shell">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-badge">AP</div>
+      <div><h1>System praktyk</h1><p>ANS</p></div>
+    </div>
+    <nav class="sidebar-nav">
+      <a href="{{ url_for('dashboard') }}">Pulpit</a>
+      <a href="{{ url_for('dashboard') }}">Pulpit</a>
+      <a href="{{ url_for('potwierdzenie') }}">Nowe potwierdzenie</a>
+      <a href="{{ url_for('lista_potwierdzen') }}">Lista potwierdzeń</a>
+      <a href="{{ url_for('dziennik') }}">Nowy dziennik</a>
+      <a href="{{ url_for('lista_dziennikow') }}">Lista dzienników</a>
+      <a href="{{ url_for('api_docs') }}">Dokumentacja (Swagger)</a>
+      <a href="{{ url_for('auth.logout') }}" style="margin-top:auto;">Wyloguj</a>
+    </nav>
+  </aside>
+
+  <main class="main-content">
+    <header class="topbar">
+      <div>
+        <h2>Panel testów REST API</h2>
+        <p class="subtitle">Zadanie 3 – Weryfikacja komunikacji frontend ↔ API</p>
+      </div>
+    </header>
+
+    <section class="content-card">
+
+      <div class="tab-bar">
+        <button class="tab-btn active" onclick="switchTab('students')">Students</button>
+        <button class="tab-btn" onclick="switchTab('internships')">Internships</button>
+        <button class="tab-btn" onclick="switchTab('documents')">Documents</button>
+      </div>
+
+      <!-- ── STUDENTS ──────────────────────────────────────────────────── -->
+      <div id="tab-students" class="tab-section active">
+        <p class="section-desc">
+          Testowanie endpointów <code>/api/students</code>. Najpierw utwórz studenta (POST),
+          skopiuj zwrócone <code>id</code>, a następnie testuj GET / PUT / DELETE.
+        </p>
+        <div class="api-grid">
+
+          <!-- GET all -->
+          <div class="api-card">
+            <h3><span class="method-badge GET">GET</span><span class="endpoint-url">/api/students</span></h3>
+            <div class="param-row">
+              <label>Szukaj (q)</label>
+              <input id="s-q" type="text" placeholder="np. Kowalski">
+            </div>
+            <button class="btn-send" onclick="apiCall('GET','/api/students','s-res-all',{q:v('s-q')})">Wyślij</button>
+            <div class="response-box" id="s-res-all">Wynik pojawi się tutaj…</div>
+          </div>
+
+          <!-- GET one -->
+          <div class="api-card">
+            <h3><span class="method-badge GET">GET</span><span class="endpoint-url">/api/students/&lt;id&gt;</span></h3>
+            <div class="param-row"><label>ID studenta</label><input id="s-id-get" type="number" placeholder="1"></div>
+            <button class="btn-send" onclick="apiCall('GET','/api/students/'+v('s-id-get'),'s-res-one')">Wyślij</button>
+            <div class="response-box" id="s-res-one">Wynik pojawi się tutaj…</div>
+          </div>
+
+          <!-- POST -->
+          <div class="api-card">
+            <h3><span class="method-badge POST">POST</span><span class="endpoint-url">/api/students</span></h3>
+            <div class="param-row"><label>Body JSON</label>
+              <textarea id="s-body-post">{
+  "first_name": "Anna",
+  "last_name": "Kowalska",
+  "index_number": "12345",
+  "email": "anna@student.ans-elblag.pl"
+}</textarea>
+            </div>
+            <button class="btn-send" onclick="apiCall('POST','/api/students','s-res-post',null,v('s-body-post'))">Wyślij</button>
+            <div class="response-box" id="s-res-post">Wynik pojawi się tutaj…</div>
+          </div>
+
+          <!-- PUT -->
+          <div class="api-card">
+            <h3><span class="method-badge PUT">PUT</span><span class="endpoint-url">/api/students/&lt;id&gt;</span></h3>
+            <div class="param-row"><label>ID studenta</label><input id="s-id-put" type="number" placeholder="1"></div>
+            <div class="param-row"><label>Body JSON</label>
+              <textarea id="s-body-put">{"email": "nowy@student.ans.edu.pl"}</textarea>
+            </div>
+            <button class="btn-send" onclick="apiCall('PUT','/api/students/'+v('s-id-put'),'s-res-put',null,v('s-body-put'))">Wyślij</button>
+            <div class="response-box" id="s-res-put">Wynik pojawi się tutaj…</div>
+          </div>
+
+          <!-- DELETE -->
+          <div class="api-card">
+            <h3><span class="method-badge DELETE">DELETE</span><span class="endpoint-url">/api/students/&lt;id&gt;</span></h3>
+            <div class="param-row"><label>ID studenta</label><input id="s-id-del" type="number" placeholder="1"></div>
+            <button class="btn-send" onclick="apiCall('DELETE','/api/students/'+v('s-id-del'),'s-res-del')">Wyślij</button>
+            <div class="response-box" id="s-res-del">Wynik pojawi się tutaj…</div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- ── INTERNSHIPS ────────────────────────────────────────────────── -->
+      <div id="tab-internships" class="tab-section">
+        <p class="section-desc">
+          Testowanie endpointów <code>/api/internships</code>. Student musi istnieć zanim dodasz praktykę.
+          Statusy: <code>pending</code> / <code>active</code> / <code>completed</code> / <code>cancelled</code>.
+        </p>
+        <div class="api-grid">
+
+          <div class="api-card">
+            <h3><span class="method-badge GET">GET</span><span class="endpoint-url">/api/internships</span></h3>
+            <div class="param-row"><label>student_id</label><input id="i-filter-sid" type="number" placeholder="(wszystkie)"></div>
+            <div class="param-row"><label>status</label>
+              <select id="i-filter-status">
+                <option value="">wszystkie</option>
+                <option>pending</option><option>active</option>
+                <option>completed</option><option>cancelled</option>
+              </select>
+            </div>
+            <button class="btn-send" onclick="apiCall('GET','/api/internships','i-res-all',{student_id:v('i-filter-sid'),status:v('i-filter-status')})">Wyślij</button>
+            <div class="response-box" id="i-res-all">Wynik pojawi się tutaj…</div>
+          </div>
+
+          <div class="api-card">
+            <h3><span class="method-badge GET">GET</span><span class="endpoint-url">/api/internships/&lt;id&gt;</span></h3>
+            <div class="param-row"><label>ID praktyki</label><input id="i-id-get" type="number" placeholder="1"></div>
+            <button class="btn-send" onclick="apiCall('GET','/api/internships/'+v('i-id-get'),'i-res-one')">Wyślij</button>
+            <div class="response-box" id="i-res-one">Wynik pojawi się tutaj…</div>
+          </div>
+
+          <div class="api-card">
+            <h3><span class="method-badge POST">POST</span><span class="endpoint-url">/api/internships</span></h3>
+            <div class="param-row"><label>Body JSON</label>
+              <textarea id="i-body-post">{
+  "student_id": 1,
+  "company_name": "Firma XYZ Sp. z o.o.",
+  "start_date": "2025-07-01",
+  "end_date": "2025-08-31"
+}</textarea>
+            </div>
+            <button class="btn-send" onclick="apiCall('POST','/api/internships','i-res-post',null,v('i-body-post'))">Wyślij</button>
+            <div class="response-box" id="i-res-post">Wynik pojawi się tutaj…</div>
+          </div>
+
+          <div class="api-card">
+            <h3><span class="method-badge PUT">PUT</span><span class="endpoint-url">/api/internships/&lt;id&gt;</span> <small style="color:var(--muted)">(zmiana statusu)</small></h3>
+            <div class="param-row"><label>ID praktyki</label><input id="i-id-put" type="number" placeholder="1"></div>
+            <div class="param-row"><label>Body JSON</label>
+              <textarea id="i-body-put">{"status": "active"}</textarea>
+            </div>
+            <button class="btn-send" onclick="apiCall('PUT','/api/internships/'+v('i-id-put'),'i-res-put',null,v('i-body-put'))">Wyślij</button>
+            <div class="response-box" id="i-res-put">Wynik pojawi się tutaj…</div>
+          </div>
+
+          <div class="api-card">
+            <h3><span class="method-badge DELETE">DELETE</span><span class="endpoint-url">/api/internships/&lt;id&gt;</span></h3>
+            <div class="param-row"><label>ID praktyki</label><input id="i-id-del" type="number" placeholder="1"></div>
+            <button class="btn-send" onclick="apiCall('DELETE','/api/internships/'+v('i-id-del'),'i-res-del')">Wyślij</button>
+            <div class="response-box" id="i-res-del">Wynik pojawi się tutaj…</div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- ── DOCUMENTS ─────────────────────────────────────────────────── -->
+      <div id="tab-documents" class="tab-section">
+        <p class="section-desc">
+          Testowanie endpointów <code>/api/documents</code>. Typy: <code>confirmation</code> / <code>diary</code> /
+          <code>report</code> / <code>agreement</code> / <code>other</code>.
+          Endopint PATCH <code>/verify</code> służy do weryfikacji przez opiekuna.
+        </p>
+        <div class="api-grid">
+
+          <div class="api-card">
+            <h3><span class="method-badge GET">GET</span><span class="endpoint-url">/api/documents</span></h3>
+            <div class="param-row"><label>internship_id</label><input id="d-filter-iid" type="number" placeholder="(wszystkie)"></div>
+            <div class="param-row"><label>verification_status</label>
+              <select id="d-filter-vs">
+                <option value="">wszystkie</option>
+                <option>pending</option><option>approved</option><option>rejected</option>
+              </select>
+            </div>
+            <button class="btn-send" onclick="apiCall('GET','/api/documents','d-res-all',{internship_id:v('d-filter-iid'),verification_status:v('d-filter-vs')})">Wyślij</button>
+            <div class="response-box" id="d-res-all">Wynik pojawi się tutaj…</div>
+          </div>
+
+          <div class="api-card">
+            <h3><span class="method-badge POST">POST</span><span class="endpoint-url">/api/documents</span></h3>
+            <div class="param-row"><label>Body JSON</label>
+              <textarea id="d-body-post">{
+  "name": "Potwierdzenie efektów.pdf",
+  "document_type": "confirmation",
+  "internship_id": 1
+}</textarea>
+            </div>
+            <button class="btn-send" onclick="apiCall('POST','/api/documents','d-res-post',null,v('d-body-post'))">Wyślij</button>
+            <div class="response-box" id="d-res-post">Wynik pojawi się tutaj…</div>
+          </div>
+
+          <div class="api-card">
+            <h3><span class="method-badge DELETE">DELETE</span><span class="endpoint-url">/api/documents/&lt;id&gt;</span></h3>
+            <div class="param-row"><label>ID dokumentu</label><input id="d-id-del" type="number" placeholder="1"></div>
+            <button class="btn-send" onclick="apiCall('DELETE','/api/documents/'+v('d-id-del'),'d-res-del')">Wyślij</button>
+            <div class="response-box" id="d-res-del">Wynik pojawi się tutaj…</div>
+          </div>
+
+          <div class="api-card">
+            <h3><span class="method-badge PATCH">PATCH</span><span class="endpoint-url">/api/documents/&lt;id&gt;/verify</span></h3>
+            <div class="param-row"><label>ID dokumentu</label><input id="d-id-verify" type="number" placeholder="1"></div>
+            <div class="param-row"><label>Body JSON</label>
+              <textarea id="d-body-verify">{
+  "verification_status": "approved",
+  "supervisor_comment": "Dokumentacja kompletna i prawidłowa."
+}</textarea>
+            </div>
+            <button class="btn-send" onclick="apiCall('PATCH','/api/documents/'+v('d-id-verify')+'/verify','d-res-verify',null,v('d-body-verify'))">Wyślij</button>
+            <div class="response-box" id="d-res-verify">Wynik pojawi się tutaj…</div>
+          </div>
+
+        </div>
+      </div>
+
+    </section>
+  </main>
+</div>
+
+<script>
+function v(id) {
+  const el = document.getElementById(id);
+  return el ? el.value : "";
+}
+
+function switchTab(name) {
+  document.querySelectorAll(".tab-section").forEach(s => s.classList.remove("active"));
+  document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+  document.getElementById("tab-" + name).classList.add("active");
+  event.target.classList.add("active");
+}
+
+async function apiCall(method, url, resultId, params, body) {
+  const box = document.getElementById(resultId);
+  box.textContent = "⏳ Wysyłanie…";
+  box.className = "response-box";
+
+  // Buduj query string
+  if (params) {
+    const qs = Object.entries(params)
+      .filter(([, val]) => val !== "" && val !== null && val !== undefined)
+      .map(([k, val]) => `${encodeURIComponent(k)}=${encodeURIComponent(val)}`)
+      .join("&");
+    if (qs) url += "?" + qs;
+  }
+
+  const opts = { method, headers: {} };
+  if (body) {
+    try {
+      JSON.parse(body);  // walidacja
+      opts.headers["Content-Type"] = "application/json";
+      opts.body = body;
+    } catch {
+      box.textContent = "❌ Błąd: nieprawidłowy JSON w body.";
+      box.classList.add("status-err");
+      return;
+    }
+  }
+
+  const start = Date.now();
+  try {
+    const res  = await fetch(url, opts);
+    const ms   = Date.now() - start;
+    const text = await res.text();
+    let pretty = text;
+    try { pretty = JSON.stringify(JSON.parse(text), null, 2); } catch {}
+
+    const statusClass = res.ok ? "status-ok" : "status-err";
+    box.innerHTML = `<span class="${statusClass}">${method} ${url}\nHTTP ${res.status} ${res.statusText} (${ms} ms)</span>\n\n${pretty}`;
+  } catch (err) {
+    box.textContent = "❌ Błąd sieci: " + err.message;
+    box.classList.add("status-err");
+  }
+}
+</script>
+</body>
+</html>

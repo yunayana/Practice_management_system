@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block title %}Pulpit – System praktyk{% endblock %}
+{% block page_title %}Witaj, {{ user.full_name }}!{% endblock %}
+{% block page_subtitle %}Rola: {{ user.role }} &bull; {{ user.email }}{% endblock %}
+
+{% block content %}
+<div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:4px;">
+
+  <a href="{{ url_for('karta') }}" style="flex:1;min-width:160px;padding:18px 20px;background:#f7f7f7;border-radius:4px;text-decoration:none;color:#1f2937;border:1px solid #d1d5db;border-left:3px solid #1f2937;">
+    <strong style="font-size:14px;">Karta praktyki</strong>
+    <div style="font-size:11px;color:#9ca3af;margin:3px 0 6px;">Zał. nr 3</div>
+    <p style="font-size:12px;color:#6b7280;margin:0;">Dane firmy i opiekuna zakładowego</p>
+  </a>
+
+  <a href="{{ url_for('potwierdzenie') }}" style="flex:1;min-width:160px;padding:18px 20px;background:#f7f7f7;border-radius:4px;text-decoration:none;color:#1f2937;border:1px solid #d1d5db;border-left:3px solid #374151;">
+    <strong style="font-size:14px;">Potwierdzenie</strong>
+    <div style="font-size:11px;color:#9ca3af;margin:3px 0 6px;">Zał. nr 4</div>
+    <p style="font-size:12px;color:#6b7280;margin:0;">Potwierdzenie efektów uczenia się</p>
+  </a>
+
+  <a href="{{ url_for('kwestionariusz') }}" style="flex:1;min-width:160px;padding:18px 20px;background:#f7f7f7;border-radius:4px;text-decoration:none;color:#1f2937;border:1px solid #d1d5db;border-left:3px solid #4b5563;">
+    <strong style="font-size:14px;">Ankieta</strong>
+    <div style="font-size:11px;color:#9ca3af;margin:3px 0 6px;">Zał. nr 5</div>
+    <p style="font-size:12px;color:#6b7280;margin:0;">Ocena jakości praktyki</p>
+  </a>
+
+  <a href="{{ url_for('dziennik') }}" style="flex:1;min-width:160px;padding:18px 20px;background:#f7f7f7;border-radius:4px;text-decoration:none;color:#1f2937;border:1px solid #d1d5db;border-left:3px solid #6b7280;">
+    <strong style="font-size:14px;">Dziennik</strong>
+    <div style="font-size:11px;color:#9ca3af;margin:3px 0 6px;">Zał. nr 6</div>
+    <p style="font-size:12px;color:#6b7280;margin:0;">Dziennik codziennych wpisów</p>
+  </a>
+
+  <a href="{{ url_for('sprawozdanie') }}" style="flex:1;min-width:160px;padding:18px 20px;background:#f7f7f7;border-radius:4px;text-decoration:none;color:#1f2937;border:1px solid #d1d5db;border-left:3px solid #9ca3af;">
+    <strong style="font-size:14px;">Sprawozdanie</strong>
+    <div style="font-size:11px;color:#9ca3af;margin:3px 0 6px;">Zał. nr 7</div>
+    <p style="font-size:12px;color:#6b7280;margin:0;">Końcowe sprawozdanie z praktyki</p>
+  </a>
+
+</div>
+
+<div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:10px;">
+  <a href="{{ url_for('lista_kart') }}" style="flex:1;min-width:120px;padding:10px 14px;background:#fff;border-radius:4px;text-decoration:none;color:#374151;font-size:12px;border:1px solid #d1d5db;text-align:center;">Lista kart</a>
+  <a href="{{ url_for('lista_potwierdzen') }}" style="flex:1;min-width:120px;padding:10px 14px;background:#fff;border-radius:4px;text-decoration:none;color:#374151;font-size:12px;border:1px solid #d1d5db;text-align:center;">Lista potwierdzeń</a>
+  <a href="{{ url_for('lista_ankiet') }}" style="flex:1;min-width:120px;padding:10px 14px;background:#fff;border-radius:4px;text-decoration:none;color:#374151;font-size:12px;border:1px solid #d1d5db;text-align:center;">Lista ankiet</a>
+  <a href="{{ url_for('lista_dziennikow') }}" style="flex:1;min-width:120px;padding:10px 14px;background:#fff;border-radius:4px;text-decoration:none;color:#374151;font-size:12px;border:1px solid #d1d5db;text-align:center;">Lista dzienników</a>
+  <a href="{{ url_for('lista_sprawozdan') }}" style="flex:1;min-width:120px;padding:10px 14px;background:#fff;border-radius:4px;text-decoration:none;color:#374151;font-size:12px;border:1px solid #d1d5db;text-align:center;">Lista sprawozdań</a>
+</div>
+
+<div style="margin-top:20px;padding:14px 16px;background:#f7f7f7;border:1px solid #d1d5db;border-radius:4px;font-size:12px;color:#6b7280;">
+  Zalogowano przez: <strong>{{ user.auth_provider }}</strong> &bull;
+  Ostatnie logowanie: <strong>{{ user.last_login.strftime('%d.%m.%Y %H:%M') if user.last_login else '–' }}</strong>
+</div>
+{% endblock %}

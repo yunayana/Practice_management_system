@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{% block title %}Lista ankiet{% endblock %}
+{% block page_title %}Kwestionariusze ankiety{% endblock %}
+{% block page_subtitle %}Załącznik nr 5 – ocena jakości praktyki przez studentów{% endblock %}
+
+{% block content %}
+<div class="actions">
+    <a class="btn" href="{{ url_for('kwestionariusz') }}">+ Nowa ankieta</a>
+</div>
+
+{% if surveys %}
+<div class="table-wrap">
+    <table>
+        <thead>
+            <tr>
+                <th>Nr albumu</th>
+                <th>Student</th>
+                <th>Firma</th>
+                <th>Rok akademicki</th>
+                <th>Ocena ogólna</th>
+                <th>Akcje</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for s in surveys %}
+            <tr>
+                <td>{{ s.album }}</td>
+                <td>{{ s.student_name }}</td>
+                <td>{{ s.company_name or '–' }}</td>
+                <td>{{ s.academic_year or '–' }}</td>
+                <td style="text-align:center;">{{ s.q10 or '–' }}/5</td>
+                <td>
+                    <a class="btn btn-secondary" href="{{ url_for('edytuj_ankiete', album=s.album) }}">Edytuj</a>
+                    <a class="btn" href="{{ url_for('pdf_ankieta', album=s.album) }}" target="_blank">PDF</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="info-box">Brak ankiet. <a href="{{ url_for('kwestionariusz') }}">Dodaj pierwszą ankietę.</a></div>
+{% endif %}
+{% endblock %}

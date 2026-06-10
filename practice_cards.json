@@ -1,0 +1,23 @@
+[
+    {
+        "student_name": "Yana Trotsenko",
+        "album": "21232",
+        "study_program": "Informatyka",
+        "specialization": "Bazy Danych",
+        "academic_year": "2025/2026",
+        "semester": "VI",
+        "company_name": "Infosys",
+        "company_address": "ul. Teatralna 45",
+        "company_phone": "667969725",
+        "company_nip": "1234567890",
+        "company_type": "Obsługa urządzeń",
+        "company_supervisor_name": "Jan Kowalski",
+        "company_supervisor_title": "Inżynier",
+        "university_supervisor": "Marek Kowalski",
+        "start_date": "2026-10-01",
+        "end_date": "2027-03-01",
+        "total_hours": "960",
+        "grade": "4.5 (db+)",
+        "company_supervisor_opinion": "Bardzo dobrze"
+    }
+]

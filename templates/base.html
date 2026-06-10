@@ -13,16 +13,74 @@
                 <div class="brand-badge">AP</div>
                 <div>
                     <h1>System praktyk</h1>
-                    <p>TYHA</p>
+                    <p>ANS Elbląg</p>
                 </div>
             </div>
 
             <nav class="sidebar-nav">
-                <a href="{{ url_for('index') }}">Kandydaci</a>
+                <a href="{{ url_for('dashboard') }}">Pulpit</a>
+
+                {% if current_user.is_authenticated %}
+
+                {% if current_user.role == 'student' %}
+                {# ── Nawigacja studenta ── #}
+                <span class="nav-section">Moje dokumenty</span>
+                <a href="{{ url_for('edytuj_karte', album=current_user.email.split('@')[0]) }}">Karta praktyki (Zał. 3)</a>
+                <a href="{{ url_for('edytuj_potwierdzenie', album=current_user.email.split('@')[0]) }}">Potwierdzenie (Zał. 4)</a>
+                <a href="{{ url_for('edytuj_ankiete', album=current_user.email.split('@')[0]) }}">Ankieta (Zał. 5)</a>
+                <a href="{{ url_for('edytuj_dziennik', album=current_user.email.split('@')[0]) }}">Dziennik (Zał. 6)</a>
+                <a href="{{ url_for('kalendarz', album=current_user.email.split('@')[0]) }}">Kalendarz praktyki</a>
+                <a href="{{ url_for('edytuj_sprawozdanie', album=current_user.email.split('@')[0]) }}">Sprawozdanie (Zał. 7)</a>
+
+                {% elif current_user.role == 'opiekun_zakladowy' %}
+                {# ── Nawigacja opiekuna zakładowego ── #}
+                <span class="nav-section">Zał. 3 – Karta praktyki</span>
+                <a href="{{ url_for('lista_kart') }}">Lista kart studentów</a>
+                <span class="nav-section">Zał. 4 – Potwierdzenie</span>
+                <a href="{{ url_for('lista_potwierdzen') }}">Lista potwierdzeń</a>
+
+                {% elif current_user.role == 'opiekun_uczelniany' %}
+                {# ── Nawigacja opiekuna uczelnianego ── #}
+                <span class="nav-section">Zał. 3 – Karta praktyki</span>
+                <a href="{{ url_for('lista_kart') }}">Lista kart</a>
+                <span class="nav-section">Zał. 4 – Potwierdzenie</span>
+                <a href="{{ url_for('lista_potwierdzen') }}">Lista potwierdzeń</a>
+                <span class="nav-section">Zał. 6 – Dziennik</span>
+                <a href="{{ url_for('lista_dziennikow') }}">Lista dzienników</a>
+                <span class="nav-section">Zał. 7 – Sprawozdania</span>
+                <a href="{{ url_for('lista_sprawozdan') }}">Lista sprawozdań</a>
+
+                {% else %}
+                {# ── Nawigacja pełnego personelu (pracownik_dziekanatu, koordynator, administrator) ── #}
+                <span class="nav-section">Zał. 3 – Karta praktyki</span>
+                <a href="{{ url_for('karta') }}">Nowa karta</a>
+                <a href="{{ url_for('lista_kart') }}">Lista kart</a>
+                <span class="nav-section">Zał. 4 – Potwierdzenie</span>
                 <a href="{{ url_for('potwierdzenie') }}">Nowe potwierdzenie</a>
                 <a href="{{ url_for('lista_potwierdzen') }}">Lista potwierdzeń</a>
+                <span class="nav-section">Zał. 5 – Ankieta</span>
+                <a href="{{ url_for('kwestionariusz') }}">Nowa ankieta</a>
+                <a href="{{ url_for('lista_ankiet') }}">Lista ankiet</a>
+                <span class="nav-section">Zał. 6 – Dziennik</span>
                 <a href="{{ url_for('dziennik') }}">Nowy dziennik</a>
                 <a href="{{ url_for('lista_dziennikow') }}">Lista dzienników</a>
+                <span class="nav-section">Zał. 7 – Sprawozdanie</span>
+                <a href="{{ url_for('sprawozdanie') }}">Nowe sprawozdanie</a>
+                <a href="{{ url_for('lista_sprawozdan') }}">Lista sprawozdań</a>
+
+                {% if current_user.role in ('administrator', 'koordynator') %}
+                <span class="nav-section">Administracja</span>
+                <a href="{{ url_for('admin.users') }}">Użytkownicy</a>
+                {% endif %}
+
+                <span class="nav-section">API</span>
+                <a href="{{ url_for('api_test') }}">Panel API</a>
+                <a href="{{ url_for('api_docs') }}">Dokumentacja (Swagger)</a>
+                {% endif %}
+
+                {% endif %}
+
+                <a href="{{ url_for('auth.logout') }}" class="nav-logout">Wyloguj</a>
             </nav>
         </aside>
 

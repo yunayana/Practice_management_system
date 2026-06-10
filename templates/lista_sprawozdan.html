@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+{% block title %}Lista sprawozdań{% endblock %}
+{% block page_title %}Sprawozdania z praktyki{% endblock %}
+{% block page_subtitle %}Załącznik nr 7 – końcowe sprawozdania studentów{% endblock %}
+
+{% block content %}
+<div class="actions">
+    <a class="btn" href="{{ url_for('sprawozdanie') }}">+ Nowe sprawozdanie</a>
+</div>
+
+{% if reports %}
+<div class="table-wrap">
+    <table>
+        <thead>
+            <tr>
+                <th>Nr albumu</th>
+                <th>Student</th>
+                <th>Firma</th>
+                <th>Okres praktyki</th>
+                <th>Akcje</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for r in reports %}
+            <tr>
+                <td>{{ r.album }}</td>
+                <td>{{ r.student_name }}</td>
+                <td>{{ r.company_name or '–' }}</td>
+                <td>{{ r.start_date or '–' }} – {{ r.end_date or '–' }}</td>
+                <td>
+                    <a class="btn btn-secondary" href="{{ url_for('edytuj_sprawozdanie', album=r.album) }}">Edytuj</a>
+                    <a class="btn" href="{{ url_for('pdf_sprawozdanie', album=r.album) }}" target="_blank">PDF</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="info-box">Brak sprawozdań. <a href="{{ url_for('sprawozdanie') }}">Dodaj pierwsze sprawozdanie.</a></div>
+{% endif %}
+{% endblock %}

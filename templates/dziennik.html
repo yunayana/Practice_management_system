@@ -9,43 +9,60 @@
     <a class="btn btn-secondary" href="{{ url_for('lista_dziennikow') }}">Lista dzienników</a>
 </div>
 
-<form method="post" action="{{ url_for('dziennik') }}">
+<div id="dz-errors" class="form-error-banner" style="display:none;"></div>
+<form id="dziennik-form" method="post" action="{{ url_for('dziennik') }}" novalidate>
     <h3 class="section-title">Dane studenta</h3>
 
     <div class="form-grid">
         <label>
-            Student
-            <input type="text" name="student_name" value="{{ data.student_name if data else '' }}">
+            Student <span class="req">*</span>
+            <input type="text" name="student_name" id="dz_student_name"
+                   value="{{ data.student_name if data else '' }}" required>
+            <span class="field-error" id="dz-err-student_name"></span>
         </label>
 
         <label>
-            Nr albumu
-            <input type="text" name="album" value="{{ data.album if data else '' }}">
+            Nr albumu <span class="req">*</span>
+            <input type="text" name="album" id="dz_album"
+                   value="{{ locked_album or (data.album if data else '') }}" required pattern="^\d{3,6}$"
+                   {% if locked_album %}readonly style="background:#f7f7f7;color:#6b7280;"{% endif %}>
+            <span class="field-error" id="dz-err-album"></span>
         </label>
 
         <label>
-            W zakresie
-            <input type="text" name="specialization" value="{{ data.specialization if data else '' }}">
+            W zakresie <span class="req">*</span>
+            <input type="text" name="specialization" id="dz_specialization"
+                   value="{{ data.specialization if data else '' }}" required>
+            <span class="field-error" id="dz-err-specialization"></span>
         </label>
 
         <label>
-            Rok akademicki
-            <input type="text" name="academic_year" value="{{ data.academic_year if data else '' }}">
+            Rok akademicki <span class="req">*</span>
+            <input type="text" name="academic_year" id="dz_academic_year"
+                   value="{{ data.academic_year if data else '' }}" required
+                   pattern="^\d{4}/\d{4}$" title="Format: 2024/2025">
+            <span class="field-error" id="dz-err-academic_year"></span>
         </label>
 
         <label>
-            Miejsce odbywania praktyki
-            <input type="text" name="practice_place" value="{{ data.practice_place if data else '' }}">
+            Miejsce odbywania praktyki <span class="req">*</span>
+            <input type="text" name="practice_place" id="dz_practice_place"
+                   value="{{ data.practice_place if data else '' }}" required>
+            <span class="field-error" id="dz-err-practice_place"></span>
         </label>
 
         <label>
-            Data rozpoczęcia
-            <input type="date" name="start_date" value="{{ data.start_date if data else '' }}">
+            Data rozpoczęcia <span class="req">*</span>
+            <input type="date" name="start_date" id="dz_start_date"
+                   value="{{ data.start_date if data else '' }}" required>
+            <span class="field-error" id="dz-err-start_date"></span>
         </label>
 
         <label>
-            Data zakończenia
-            <input type="date" name="end_date" value="{{ data.end_date if data else '' }}">
+            Data zakończenia <span class="req">*</span>
+            <input type="date" name="end_date" id="dz_end_date"
+                   value="{{ data.end_date if data else '' }}" required>
+            <span class="field-error" id="dz-err-end_date"></span>
         </label>
     </div>
 
@@ -111,6 +128,14 @@
     </div>
 </form>
 
+<style>
+  .req { color: var(--danger); }
+  .field-error { display: block; color: var(--danger); font-size: 12px; margin-top: 2px; min-height: 16px; }
+  .input-invalid { border-color: var(--danger) !important; }
+  .form-error-banner { background: #fee2e2; color: var(--danger); border-radius: 8px;
+    padding: 12px 16px; margin-bottom: 16px; font-size: 14px; }
+</style>
+
 <script>
     function createRow() {
         const row = document.createElement("tr");
@@ -138,8 +163,63 @@
     }
 
     function deleteRow(button) {
-        const row = button.closest("tr");
-        row.remove();
+        const table = document.getElementById("journal-table");
+        if (table.rows.length <= 1) {
+            alert("Dziennik musi mieć co najmniej jeden wiersz.");
+            return;
+        }
+        button.closest("tr").remove();
     }
+
+    // ── Walidacja formularza ────────────────────────────────────────────────
+    const DZ_FIELDS = [
+        { id: "dz_student_name",  label: "Imię i nazwisko studenta",    check: v => v.trim().length >= 3 },
+        { id: "dz_album",         label: "Nr albumu",                   check: v => /^\d{3,6}$/.test(v.trim()) },
+        { id: "dz_specialization",label: "W zakresie (specjalizacja)",  check: v => v.trim().length >= 2 },
+        { id: "dz_academic_year", label: "Rok akademicki",              check: v => /^\d{4}\/\d{4}$/.test(v.trim()) },
+        { id: "dz_practice_place",label: "Miejsce odbywania praktyki",  check: v => v.trim().length >= 3 },
+        { id: "dz_start_date",    label: "Data rozpoczęcia",            check: v => Boolean(v) },
+        { id: "dz_end_date",      label: "Data zakończenia",            check: (v, form) => {
+            const s = form.querySelector("#dz_start_date").value;
+            return Boolean(v) && (!s || v >= s);
+        }},
+    ];
+
+    function validateDzField(field, form) {
+        const el  = document.getElementById(field.id);
+        const err = document.getElementById("dz-err-" + field.id.replace("dz_", ""));
+        const ok  = field.check(el.value, form);
+        if (ok) {
+            el.classList.remove("input-invalid");
+            if (err) err.textContent = "";
+        } else {
+            el.classList.add("input-invalid");
+            const msg = field.id === "dz_end_date" && el.value
+                ? "Data zakończenia nie może być wcześniejsza niż data rozpoczęcia."
+                : `Pole „${field.label}" jest wymagane lub nieprawidłowe.`;
+            if (err) err.textContent = msg;
+        }
+        return ok;
+    }
+
+    document.addEventListener("DOMContentLoaded", function () {
+        const form = document.getElementById("dziennik-form");
+        DZ_FIELDS.forEach(f => {
+            const el = document.getElementById(f.id);
+            if (el) el.addEventListener("blur", () => validateDzField(f, form));
+        });
+
+        form.addEventListener("submit", function (e) {
+            const errors = DZ_FIELDS.filter(f => !validateDzField(f, form));
+            if (errors.length > 0) {
+                e.preventDefault();
+                const banner = document.getElementById("dz-errors");
+                banner.style.display = "block";
+                banner.innerHTML = "<strong>Proszę poprawić następujące pola:</strong><ul style='margin:6px 0 0 16px'>"
+                    + errors.map(f => `<li>${f.label}</li>`).join("") + "</ul>";
+                banner.scrollIntoView({ behavior: "smooth" });
+            }
+        });
+    });
 </script>
 {% endblock %}

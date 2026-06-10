@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+
+{% block title %}Pulpit – Opiekun uczelniany{% endblock %}
+{% block page_title %}Witaj, {{ user.full_name }}!{% endblock %}
+{% block page_subtitle %}Opiekun uczelniany &bull; {{ user.email }}{% endblock %}
+
+{% block content %}
+
+<div class="info-box" style="margin-bottom:16px;">
+    Twoje zadanie: przejrzyj potwierdzenia efektów uczenia się (Zał. 4) i wpisz swoją opinię
+    dla każdego studenta. Możesz też przeglądać karty, dzienniki i sprawozdania.
+</div>
+
+<!-- Statystyki -->
+<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin-bottom:20px;">
+    {% set stat_items = [
+        (stats.karty,         'Karty',          'lista_kart'),
+        (stats.potwierdzenia, 'Potwierdzenia',  'lista_potwierdzen'),
+        (stats.dzienniki,     'Dzienniki',       'lista_dziennikow'),
+        (stats.sprawozdania,  'Sprawozdania',   'lista_sprawozdan'),
+    ] %}
+    {% for count, label, route in stat_items %}
+    <a href="{{ url_for(route) }}" style="padding:14px 16px;background:#fff;border:1px solid #d1d5db;border-radius:4px;text-decoration:none;color:#1f2937;display:block;">
+        <div style="font-size:22px;font-weight:700;color:#374151;">{{ count }}</div>
+        <div style="font-size:12px;color:#6b7280;margin-top:2px;">{{ label }}</div>
+    </a>
+    {% endfor %}
+    <div style="padding:14px 16px;background:#fff;border:1px solid #d1d5db;border-radius:4px;">
+        <div style="font-size:22px;font-weight:700;color:#0f766e;">{{ opinions_missing }}</div>
+        <div style="font-size:12px;color:#6b7280;margin-top:2px;">Bez opinii</div>
+    </div>
+</div>
+
+<!-- Potwierdzenia czekające na opinię -->
+<h3 class="section-title">Zał. 4 – Potwierdzenia bez opinii uczelnianej</h3>
+
+{% if pending_opinions %}
+<div class="table-wrap">
+    <table>
+        <thead>
+            <tr>
+                <th>Nr albumu</th>
+                <th>Student</th>
+                <th>Specjalność</th>
+                <th>Efektów zatwierdzonych</th>
+                <th>Notatka zakładu</th>
+                <th>Akcja</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for s in pending_opinions %}
+            {% set filled_effects = s.effects.values() | selectattr('__bool__') | list if s.effects else [] %}
+            <tr>
+                <td>{{ s.album }}</td>
+                <td>{{ s.student_name or '–' }}</td>
+                <td>{{ s.specialty or '–' }}</td>
+                <td style="text-align:center;">{{ filled_effects | length }}/13</td>
+                <td>
+                    {% if s.company_supervisor_note %}
+                    <span style="color:#0f766e;">Tak</span>
+                    {% else %}
+                    <span style="color:#9ca3af;">Brak</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <a class="btn" style="font-size:12px;padding:5px 10px;"
+                       href="{{ url_for('edytuj_potwierdzenie', album=s.album) }}">
+                        Wpisz opinię
+                    </a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="info-box" style="color:#0f766e;border-color:#0f766e;">
+    Wszystkie potwierdzenia mają wpisaną opinię uczelnianą.
+</div>
+{% endif %}
+
+<!-- Potwierdzenia z opinią -->
+{% if completed_opinions %}
+<h3 class="section-title" style="margin-top:24px;">Potwierdzenia z wpisaną opinią</h3>
+<div class="table-wrap">
+    <table>
+        <thead>
+            <tr>
+                <th>Nr albumu</th>
+                <th>Student</th>
+                <th>Efektów</th>
+                <th>Akcja</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for s in completed_opinions %}
+            {% set filled_effects = s.effects.values() | selectattr('__bool__') | list if s.effects else [] %}
+            <tr>
+                <td>{{ s.album }}</td>
+                <td>{{ s.student_name or '–' }}</td>
+                <td style="text-align:center;">{{ filled_effects | length }}/13</td>
+                <td>
+                    <a class="btn btn-secondary" style="font-size:12px;padding:5px 10px;"
+                       href="{{ url_for('edytuj_potwierdzenie', album=s.album) }}">Edytuj opinię</a>
+                    <a class="btn btn-secondary" style="font-size:12px;padding:5px 10px;"
+                       href="{{ url_for('pdf_potwierdzenie', album=s.album) }}">PDF</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+
+<div style="margin-top:16px;padding:12px 16px;background:#f7f7f7;border:1px solid #d1d5db;border-radius:4px;font-size:12px;color:#6b7280;">
+    Zalogowano przez: <strong>{{ user.auth_provider }}</strong> &bull;
+    Ostatnie logowanie: <strong>{{ user.last_login.strftime('%d.%m.%Y %H:%M') if user.last_login else '–' }}</strong>
+</div>
+
+{% endblock %}

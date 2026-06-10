@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+
+{% block title %}Pulpit – System praktyk{% endblock %}
+{% block page_title %}Witaj, {{ user.full_name }}!{% endblock %}
+{% block page_subtitle %}Rola: {{ user.role }} &bull; {{ user.email }}{% endblock %}
+
+{% block content %}
+
+<!-- Statystyki dokumentów -->
+<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin-bottom:16px;">
+  {% set items = [
+    (stats.karty,         'Karty praktyki',  'lista_kart'),
+    (stats.potwierdzenia, 'Potwierdzenia',   'lista_potwierdzen'),
+    (stats.ankiety,       'Ankiety',         'lista_ankiet'),
+    (stats.dzienniki,     'Dzienniki',       'lista_dziennikow'),
+    (stats.sprawozdania,  'Sprawozdania',    'lista_sprawozdan'),
+  ] %}
+  {% for count, label, route in items %}
+  <a href="{{ url_for(route) }}" style="padding:14px 16px;background:#fff;border:1px solid #d1d5db;border-radius:4px;text-decoration:none;color:#1f2937;display:block;">
+    <div style="font-size:22px;font-weight:700;color:#374151;">{{ count }}</div>
+    <div style="font-size:12px;color:#6b7280;margin-top:2px;">{{ label }}</div>
+  </a>
+  {% endfor %}
+</div>
+
+<!-- Szybkie akcje per załącznik -->
+<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;">
+  {% set docs = [
+    ('karta',        'lista_kart',        'Karta praktyki',   'Zał. nr 3'),
+    ('potwierdzenie','lista_potwierdzen', 'Potwierdzenie',    'Zał. nr 4'),
+    ('kwestionariusz','lista_ankiet',     'Ankieta',          'Zał. nr 5'),
+    ('dziennik',     'lista_dziennikow',  'Dziennik',         'Zał. nr 6'),
+    ('sprawozdanie', 'lista_sprawozdan',  'Sprawozdanie',     'Zał. nr 7'),
+  ] %}
+  {% for form_route, list_route, label, zal in docs %}
+  <div style="padding:14px 16px;background:#f7f7f7;border:1px solid #d1d5db;border-radius:4px;">
+    <strong style="font-size:13px;">{{ label }}</strong>
+    <div style="font-size:11px;color:#9ca3af;margin:3px 0 10px;">{{ zal }}</div>
+    <div style="display:flex;gap:6px;">
+      <a href="{{ url_for(list_route) }}" class="btn btn-secondary" style="flex:1;text-align:center;padding:7px 10px;font-size:12px;">Lista</a>
+      <a href="{{ url_for(form_route) }}" class="btn" style="flex:1;text-align:center;padding:7px 10px;font-size:12px;">Nowy</a>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+{% if user.role in ('pracownik_dziekanatu', 'koordynator', 'administrator') %}
+<div style="margin-top:16px;padding:14px 16px;background:#fff;border:1px solid #d1d5db;border-radius:4px;">
+  <strong style="font-size:13px;">Eksport zbiorczy</strong>
+  <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;">
+    <a href="{{ url_for('pdf_zip_all') }}" class="btn btn-secondary" style="font-size:12px;padding:7px 14px;">
+      Pobierz wszystkie raporty (ZIP)
+    </a>
+  </div>
+</div>
+{% endif %}
+
+<div style="margin-top:12px;padding:12px 16px;background:#f7f7f7;border:1px solid #d1d5db;border-radius:4px;font-size:12px;color:#6b7280;">
+  Zalogowano przez: <strong>{{ user.auth_provider }}</strong> &bull;
+  Ostatnie logowanie: <strong>{{ user.last_login.strftime('%d.%m.%Y %H:%M') if user.last_login else '–' }}</strong>
+</div>
+{% endblock %}

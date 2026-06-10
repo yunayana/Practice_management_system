@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+
+{% block title %}Pulpit – Opiekun zakładowy{% endblock %}
+{% block page_title %}Witaj, {{ user.full_name }}!{% endblock %}
+{% block page_subtitle %}Opiekun zakładowy &bull; {{ user.email }}{% endblock %}
+
+{% block content %}
+
+<div class="info-box" style="margin-bottom:16px;">
+    Twoje zadanie: uzupełnij dane zakładu pracy w kartach studentów (Zał. 3) oraz potwierdź
+    efekty uczenia się (Zał. 4). Kliknij odpowiedni przycisk przy nazwisku studenta.
+</div>
+
+<!-- Zał. 3 – Karty do uzupełnienia -->
+<h3 class="section-title">Zał. 3 – Karty praktyki do uzupełnienia</h3>
+
+{% set karty_brak  = cards | selectattr('company_name', 'equalto', '')  | list %}
+{% set karty_brak2 = cards | rejectattr('company_name', 'defined')      | list %}
+{% set do_uzup = [] %}
+{% for c in cards %}
+  {% if not c.company_name %}{% set _ = do_uzup.append(c) %}{% endif %}
+{% endfor %}
+
+{% if cards %}
+<div class="table-wrap">
+    <table>
+        <thead>
+            <tr>
+                <th>Nr albumu</th>
+                <th>Student</th>
+                <th>Kierunek</th>
+                <th>Dane zakładu</th>
+                <th>Akcja</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for c in cards %}
+            <tr>
+                <td>{{ c.album }}</td>
+                <td>{{ c.student_name or '–' }}</td>
+                <td>{{ c.study_program or '–' }}</td>
+                <td>
+                    {% if c.company_name %}
+                    <span style="color:#0f766e;font-weight:600;">Wypełnione</span>
+                    {% else %}
+                    <span style="color:#9ca3af;">Brak</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <a class="btn btn-secondary" style="font-size:12px;padding:5px 10px;"
+                       href="{{ url_for('edytuj_karte', album=c.album) }}">
+                        {% if c.company_name %}Edytuj{% else %}Wypełnij dane zakładu{% endif %}
+                    </a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="info-box">Brak kart do wyświetlenia. Studenci muszą najpierw wypełnić swoje dane.</div>
+{% endif %}
+
+<!-- Zał. 4 – Potwierdzenia -->
+<h3 class="section-title" style="margin-top:24px;">Zał. 4 – Potwierdzenia efektów do uzupełnienia</h3>
+
+{% if effects %}
+<div class="table-wrap">
+    <table>
+        <thead>
+            <tr>
+                <th>Nr albumu</th>
+                <th>Student</th>
+                <th>Specjalność</th>
+                <th>Efekty</th>
+                <th>Moja notatka</th>
+                <th>Akcja</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for s in effects %}
+            {% set filled_effects = s.effects.values() | selectattr('__bool__') | list if s.effects else [] %}
+            <tr>
+                <td>{{ s.album }}</td>
+                <td>{{ s.student_name or '–' }}</td>
+                <td>{{ s.specialty or '–' }}</td>
+                <td>
+                    {% if filled_effects %}
+                    <span style="color:#0f766e;font-weight:600;">{{ filled_effects | length }}/13</span>
+                    {% else %}
+                    <span style="color:#9ca3af;">Brak</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if s.company_supervisor_note %}
+                    <span style="color:#0f766e;">Tak</span>
+                    {% else %}
+                    <span style="color:#9ca3af;">Brak</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <a class="btn btn-secondary" style="font-size:12px;padding:5px 10px;"
+                       href="{{ url_for('edytuj_potwierdzenie', album=s.album) }}">
+                        Wypełnij efekty
+                    </a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="info-box">Brak potwierdzeń do wyświetlenia.</div>
+{% endif %}
+
+<div style="margin-top:16px;padding:12px 16px;background:#f7f7f7;border:1px solid #d1d5db;border-radius:4px;font-size:12px;color:#6b7280;">
+    Zalogowano przez: <strong>{{ user.auth_provider }}</strong> &bull;
+    Ostatnie logowanie: <strong>{{ user.last_login.strftime('%d.%m.%Y %H:%M') if user.last_login else '–' }}</strong>
+</div>
+
+{% endblock %}

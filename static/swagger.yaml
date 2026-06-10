@@ -1,0 +1,461 @@
+openapi: 3.0.3
+info:
+  title: System obsługi praktyk – REST API
+  description: |
+    REST API dla systemu zarządzania praktykami studenckimi ANS Elbląg.
+
+    ## Zasoby
+    - **students** – studenci praktyk (CRUD)
+    - **internships** – praktyki studenckie (CRUD + filtrowanie)
+    - **documents** – dokumenty powiązane z praktykami (GET / POST / DELETE / weryfikacja)
+
+    ## Statusy HTTP
+    | Kod | Znaczenie |
+    |-----|-----------|
+    | 200 | OK – żądanie przetworzone poprawnie |
+    | 201 | Created – zasób został utworzony |
+    | 400 | Bad Request – brakujące / nieprawidłowe dane |
+    | 404 | Not Found – zasób nie istnieje |
+    | 405 | Method Not Allowed |
+    | 409 | Conflict – naruszenie unikalności |
+    | 500 | Internal Server Error |
+  version: "1.0.0"
+  contact:
+    name: ANS Elbląg – Dział Praktyk
+
+servers:
+  - url: http://localhost:5000
+    description: Serwer deweloperski
+
+tags:
+  - name: students
+    description: Zarządzanie studentami praktyk
+  - name: internships
+    description: Zarządzanie praktykami studenckimi
+  - name: documents
+    description: Zarządzanie dokumentami praktyk
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Komponenty (schematy wielokrotnego użytku)
+# ─────────────────────────────────────────────────────────────────────────────
+components:
+  schemas:
+
+    Student:
+      type: object
+      properties:
+        id:           { type: integer, example: 1 }
+        first_name:   { type: string,  example: "Anna" }
+        last_name:    { type: string,  example: "Kowalska" }
+        index_number: { type: string,  example: "12345" }
+        email:        { type: string,  example: "anna.kowalska@student.ans.edu.pl" }
+        user_id:      { type: integer, nullable: true, example: null }
+        created_at:   { type: string,  format: date-time }
+        updated_at:   { type: string,  format: date-time }
+
+    StudentCreate:
+      type: object
+      required: [first_name, last_name, index_number, email]
+      properties:
+        first_name:   { type: string, example: "Anna" }
+        last_name:    { type: string, example: "Kowalska" }
+        index_number: { type: string, example: "12345" }
+        email:        { type: string, example: "anna.kowalska@student.ans.edu.pl" }
+        user_id:      { type: integer, nullable: true }
+
+    Internship:
+      type: object
+      properties:
+        id:           { type: integer, example: 1 }
+        student_id:   { type: integer, example: 1 }
+        company_name: { type: string,  example: "Firma XYZ Sp. z o.o." }
+        start_date:   { type: string,  format: date, example: "2025-07-01" }
+        end_date:     { type: string,  format: date, example: "2025-08-31" }
+        status:
+          type: string
+          enum: [pending, active, completed, cancelled]
+          example: active
+        created_at:   { type: string, format: date-time }
+        updated_at:   { type: string, format: date-time }
+
+    InternshipCreate:
+      type: object
+      required: [student_id, company_name, start_date, end_date]
+      properties:
+        student_id:   { type: integer, example: 1 }
+        company_name: { type: string,  example: "Firma XYZ Sp. z o.o." }
+        start_date:   { type: string,  format: date, example: "2025-07-01" }
+        end_date:     { type: string,  format: date, example: "2025-08-31" }
+        status:
+          type: string
+          enum: [pending, active, completed, cancelled]
+          default: pending
+
+    Document:
+      type: object
+      properties:
+        id:                  { type: integer, example: 1 }
+        name:                { type: string,  example: "Potwierdzenie efektów.pdf" }
+        document_type:
+          type: string
+          enum: [confirmation, diary, report, agreement, other]
+          example: confirmation
+        upload_date:         { type: string, format: date-time }
+        internship_id:       { type: integer, example: 1 }
+        verification_status:
+          type: string
+          enum: [pending, approved, rejected]
+          example: pending
+        supervisor_comment:  { type: string, nullable: true }
+        created_at:          { type: string, format: date-time }
+
+    DocumentCreate:
+      type: object
+      required: [name, document_type, internship_id]
+      properties:
+        name:          { type: string, example: "Potwierdzenie efektów.pdf" }
+        document_type:
+          type: string
+          enum: [confirmation, diary, report, agreement, other]
+        internship_id: { type: integer, example: 1 }
+        verification_status:
+          type: string
+          enum: [pending, approved, rejected]
+          default: pending
+        supervisor_comment: { type: string, nullable: true }
+
+    Error:
+      type: object
+      properties:
+        error:  { type: string, example: "Brakujące wymagane pola: first_name." }
+        status: { type: integer, example: 400 }
+
+    Message:
+      type: object
+      properties:
+        message: { type: string, example: "Student ID 1 został usunięty." }
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Ścieżki
+# ─────────────────────────────────────────────────────────────────────────────
+paths:
+
+  # ── /api/students ──────────────────────────────────────────────────────────
+
+  /api/students:
+    get:
+      tags: [students]
+      summary: Lista studentów
+      description: Zwraca wszystkich studentów, opcjonalnie filtrowanych po nazwisku / e-mailu / numerze indeksu.
+      parameters:
+        - name: q
+          in: query
+          description: Wyszukiwanie częściowe (nazwisko, e-mail, numer indeksu)
+          schema: { type: string }
+      responses:
+        "200":
+          description: Lista studentów
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  count:    { type: integer }
+                  students:
+                    type: array
+                    items: { $ref: "#/components/schemas/Student" }
+
+    post:
+      tags: [students]
+      summary: Dodaj studenta
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/StudentCreate" }
+            example:
+              first_name: "Anna"
+              last_name: "Kowalska"
+              index_number: "12345"
+              email: "anna.kowalska@student.ans.edu.pl"
+      responses:
+        "201":
+          description: Student utworzony
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Student" }
+        "400":
+          description: Brakujące / nieprawidłowe dane
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "409":
+          description: Student z tym indeksem lub e-mailem już istnieje
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+
+  /api/students/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema: { type: integer }
+
+    get:
+      tags: [students]
+      summary: Pobierz studenta
+      responses:
+        "200":
+          description: Dane studenta
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Student" }
+        "404":
+          description: Student nie istnieje
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+
+    put:
+      tags: [students]
+      summary: Zaktualizuj studenta
+      description: Częściowa aktualizacja – podaj tylko pola do zmiany.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/StudentCreate" }
+            example:
+              email: "nowy.email@student.ans.edu.pl"
+      responses:
+        "200":
+          description: Zaktualizowane dane studenta
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Student" }
+        "400": { description: Błąd walidacji, content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } } }
+        "404": { description: Nie znaleziono, content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } } }
+
+    delete:
+      tags: [students]
+      summary: Usuń studenta
+      description: Kaskadowo usuwa powiązane praktyki i dokumenty.
+      responses:
+        "200":
+          description: Potwierdzenie usunięcia
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Message" }
+        "404": { description: Nie znaleziono, content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } } }
+
+  # ── /api/internships ───────────────────────────────────────────────────────
+
+  /api/internships:
+    get:
+      tags: [internships]
+      summary: Lista praktyk
+      parameters:
+        - name: student_id
+          in: query
+          description: Filtrowanie po ID studenta
+          schema: { type: integer }
+        - name: status
+          in: query
+          description: Filtrowanie po statusie
+          schema: { type: string, enum: [pending, active, completed, cancelled] }
+      responses:
+        "200":
+          description: Lista praktyk
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  count: { type: integer }
+                  internships:
+                    type: array
+                    items: { $ref: "#/components/schemas/Internship" }
+
+    post:
+      tags: [internships]
+      summary: Dodaj praktykę
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/InternshipCreate" }
+            example:
+              student_id: 1
+              company_name: "Firma XYZ Sp. z o.o."
+              start_date: "2025-07-01"
+              end_date: "2025-08-31"
+      responses:
+        "201":
+          description: Praktyka utworzona
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Internship" }
+        "400": { description: Błąd walidacji, content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } } }
+        "404": { description: Student nie istnieje, content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } } }
+
+  /api/internships/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema: { type: integer }
+
+    get:
+      tags: [internships]
+      summary: Pobierz praktykę
+      responses:
+        "200":
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Internship" }
+          description: Dane praktyki
+        "404": { description: Nie znaleziono, content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } } }
+
+    put:
+      tags: [internships]
+      summary: Zaktualizuj praktykę (m.in. zmiana statusu)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/InternshipCreate" }
+            example:
+              status: "active"
+      responses:
+        "200":
+          description: Zaktualizowane dane praktyki
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Internship" }
+        "400": { description: Błąd walidacji, content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } } }
+        "404": { description: Nie znaleziono, content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } } }
+
+    delete:
+      tags: [internships]
+      summary: Usuń praktykę
+      responses:
+        "200":
+          description: Potwierdzenie usunięcia
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Message" }
+        "404": { description: Nie znaleziono, content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } } }
+
+  # ── /api/documents ─────────────────────────────────────────────────────────
+
+  /api/documents:
+    get:
+      tags: [documents]
+      summary: Lista dokumentów
+      parameters:
+        - name: internship_id
+          in: query
+          description: Filtrowanie po ID praktyki
+          schema: { type: integer }
+        - name: verification_status
+          in: query
+          schema: { type: string, enum: [pending, approved, rejected] }
+      responses:
+        "200":
+          description: Lista dokumentów
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  count: { type: integer }
+                  documents:
+                    type: array
+                    items: { $ref: "#/components/schemas/Document" }
+
+    post:
+      tags: [documents]
+      summary: Dodaj dokument
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/DocumentCreate" }
+            example:
+              name: "Potwierdzenie efektów.pdf"
+              document_type: "confirmation"
+              internship_id: 1
+      responses:
+        "201":
+          description: Dokument utworzony
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Document" }
+        "400": { description: Błąd walidacji, content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } } }
+        "404": { description: Praktyka nie istnieje, content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } } }
+
+  /api/documents/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema: { type: integer }
+
+    get:
+      tags: [documents]
+      summary: Pobierz dokument
+      responses:
+        "200":
+          description: Dane dokumentu
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Document" }
+        "404": { description: Nie znaleziono, content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } } }
+
+    delete:
+      tags: [documents]
+      summary: Usuń dokument
+      responses:
+        "200":
+          description: Potwierdzenie usunięcia
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Message" }
+        "404": { description: Nie znaleziono, content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } } }
+
+  /api/documents/{id}/verify:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema: { type: integer }
+
+    patch:
+      tags: [documents]
+      summary: Weryfikacja dokumentu przez opiekuna
+      description: Zmienia status weryfikacji i opcjonalnie dodaje komentarz opiekuna.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                verification_status:
+                  type: string
+                  enum: [approved, rejected]
+                supervisor_comment:
+                  type: string
+                  nullable: true
+            example:
+              verification_status: "approved"
+              supervisor_comment: "Dokumentacja kompletna i prawidłowa."
+      responses:
+        "200":
+          description: Zaktualizowany dokument
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Document" }
+        "400": { description: Błąd walidacji, content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } } }
+        "404": { description: Nie znaleziono, content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } } }
